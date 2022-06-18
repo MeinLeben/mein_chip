@@ -1,0 +1,9 @@
+# visual studio cache folder
+/.vs
+
+# user specific files
+*.suo
+*.user
+
+# build folder
+/[Bb]uild
