@@ -4,10 +4,14 @@
     <ClCompile Include="src\mein_chip.cpp" />
     <ClCompile Include="src\display.cpp" />
     <ClCompile Include="src\loader.cpp" />
+    <ClCompile Include="src\cpu.cpp" />
+    <ClCompile Include="src\memory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\display.h" />
     <ClInclude Include="src\loader.h" />
+    <ClInclude Include="src\cpu.h" />
+    <ClInclude Include="src\memory.h" />
   </ItemGroup>
 </Project>

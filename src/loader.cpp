@@ -2,25 +2,21 @@
 
 #include "loader.h"
 
-bool Loader::load(const char* pPath, char** pData, size_t& size) {
-	FILE* pFile;
-	errno_t err = fopen_s(&pFile, pPath, "r");
-	if (err || !pFile) {
+bool Loader::load(const char* pPath, uint8_t** pData, size_t& size) {
+	std::ifstream fs(pPath, std::ifstream::binary);
+	if (!fs.is_open()) {
 		std::cerr << "Failed to open file: " << pPath << std::endl;
 		return false;
 	}
 
-	fseek(pFile, 0L, SEEK_END);
-	size = ftell(pFile);
-	rewind(pFile);
+	fs.seekg(0, fs.end);
+	size = fs.tellg();
+	fs.seekg(0, fs.beg);
 
-	*pData = new char[size];
-	size_t num_read = fread_s(*pData, size, sizeof(char), size, pFile);
-	if ( num_read != size) {
-		std::cerr << "Failed to read data from file: " << pPath << std::endl;
-		delete[] (* pData);
-		return false;
-	}
+	*pData = new uint8_t[size];
+	fs.read((char*)(*pData), size);
+
+	fs.close();
 
 	return true;
 }

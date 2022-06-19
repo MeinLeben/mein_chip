@@ -1,16 +1,28 @@
 #include "pch.h"
 
+#include "display.h"
 #include "loader.h"
+#include "memory.h"
+#include "cpu.h"
 
 class MeinChip {
 public:
-	static int32_t Run(const char* pTitle, int32_t width, int32_t height, int32_t argc, char* argv[]) {
+	static int32_t run(const char* pTitle, int32_t width, int32_t height, int32_t argc, char* argv[]) {
 		MeinChip app;
-		if (!app.Initialize(pTitle, width, height, argc, argv)) {
+		if (!app.initialize(pTitle, width, height)) {
 			return -1;
 		}
 
-		return app.Run();
+		if (argc != 2) {
+			std::cerr << "Missing rom path as argument." << std::endl;
+			return -1;
+		}
+		
+		if (!app.load(argv[1])) {
+			return -1;
+		}
+
+		return app.run();
 	}
 
 private:
@@ -20,18 +32,13 @@ private:
 		SDL_Quit();
 
 		delete[] m_rom.pData;
+
+		delete m_pCPU;
+		delete m_pMemory;
+		delete m_pDisplay;
 	}
 
-	bool Initialize(const char* pTitle, int32_t width, int32_t height, int32_t argc, char* argv[]) {
-		if (argc != 2) {
-			std::cerr << "Missing rom path as argument." << std::endl;
-			return false;
-		}
-		else {
-			if (!Loader::load(argv[1], &m_rom.pData, m_rom.size)) {
-				return false;
-			}
-		}
+	bool initialize(const char* pTitle, int32_t width, int32_t height) {
 
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0) {
 			std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
@@ -58,42 +65,91 @@ private:
 			return false;
 		}
 
+		const uint32_t display_width = 64;
+		const uint32_t display_height = 32;
+		const uint32_t display_pixel_scale = 10;
+
+		const uint32_t x = width / 2 - display_width * display_pixel_scale / 2;
+
+		m_pDisplay = new Display(x, 20, display_pixel_scale, display_width, display_height);
+		m_pMemory = new Memory(4096);
+		m_pCPU = new CPU();
+
+		m_initialized = true;
+
 		return true;
 	}
 
-	int32_t Run() {
+	bool load(const char* pPath) {
+		if (!m_initialized) {
+			return false;
+		}
+
+		if (!Loader::load(pPath, &m_rom.pData, m_rom.size)) {
+			return false;
+		}
+
+		m_pMemory->write(0x0200, m_rom.pData, m_rom.size);
+
+		return true;
+	}
+
+	int32_t run() {
+		if (!m_initialized) {
+			return -1;
+		}
+
 		SDL_Event event;
 
+		uint32_t previous_time = 0;
 		while (true) {
 			while (SDL_PollEvent(&event)) {
-				if (event.type == SDL_QUIT) {
+				if (event.type == SDL_QUIT ||
+					event.key.keysym.sym == SDLK_ESCAPE) {
 					return 0;
 				}
 			}
 
-			Render();
+			uint32_t current_time = SDL_GetTicks();
+			float delta = (float)(current_time - previous_time);
+			if (delta > 1000 / 60.0f) {
+				Bus bus = { m_pMemory, m_pDisplay };
+				m_pCPU->tick(&bus);
+				previous_time = current_time;
+			}
+
+			render();
 		}
 
 		return 0;
 	}
 
-	void Render() {
+	void render() {
 		SDL_SetRenderDrawColor(m_pRenderer, 255, 95, 31, 255);
 		SDL_RenderClear(m_pRenderer);
+
+		m_pDisplay->draw(m_pRenderer);
+
 		SDL_RenderPresent(m_pRenderer);
 	}
+
+	bool m_initialized = false;
 
 	SDL_Window* m_pWindow = nullptr;
 	SDL_Renderer* m_pRenderer = nullptr;
 
 	struct Rom {
-		char* pData = nullptr;
+		uint8_t* pData = nullptr;
 		size_t size = 0;
 	};
 
 	Rom m_rom = {};
+
+	Display* m_pDisplay = nullptr;
+	Memory* m_pMemory = nullptr;
+	CPU* m_pCPU = nullptr;
 };
 
 int32_t main(int32_t argc, char* argv[]) {
-	return MeinChip::Run("Mein Chip8 Interpreter", 720, 405, argc, argv);
+	return MeinChip::run("Mein Chip8 Interpreter", 720, 405, argc, argv);
 }

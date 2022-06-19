@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\cpu.cpp" />
     <ClCompile Include="src\display.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
@@ -41,10 +42,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="src\memory.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\cpu.h" />
     <ClInclude Include="src\display.h" />
     <ClInclude Include="src\loader.h" />
+    <ClInclude Include="src\memory.h" />
     <ClInclude Include="src\pch.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

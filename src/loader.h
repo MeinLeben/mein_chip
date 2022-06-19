@@ -3,6 +3,6 @@
 class Loader
 {
 public:
-	static bool load(const char* path, char** pData, size_t& size);
+	static bool load(const char* pPath, uint8_t** pData, size_t& size);
 };
 
