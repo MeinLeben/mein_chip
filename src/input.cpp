@@ -1,5 +1,3 @@
-#include "pch.h"
-
 #include "input.h"
 
 Input::Input() {

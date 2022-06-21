@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "memory.h"
 
 Memory::Memory(size_t size) :

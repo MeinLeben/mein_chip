@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "cpu.h"
 #include "display.h"
 #include "input.h"

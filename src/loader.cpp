@@ -1,5 +1,3 @@
-#include "pch.h"
-
 #include "loader.h"
 
 bool Loader::load(const char* pPath, uint8_t** pData, size_t& size) {

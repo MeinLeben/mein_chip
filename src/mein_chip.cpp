@@ -1,5 +1,3 @@
-#include "pch.h"
-
 #include "display.h"
 #include "input.h"
 #include "loader.h"
