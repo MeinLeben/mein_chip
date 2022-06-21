@@ -16,10 +16,14 @@ public:
 
 	void write(uint16_t address, uint8_t* pData, size_t size) {
 		assert((size_t)address + size < m_size);
+#ifdef WIN32
 		errno_t err = memcpy_s(m_pMemory + address, m_size, pData, size);
 		if (err != 0) {
 			throw std::runtime_error("Failed to write to memory.");
 		}
+#else
+		memcpy(m_pMemory + address, pData, size);
+#endif
 	}
 
 	uint16_t read_font_address(uint8_t value) {

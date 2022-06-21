@@ -1,10 +1,12 @@
 #pragma once
 class Memory;
 class Display;
+class Input;
 
 struct Bus {
 	Memory* pMemory = nullptr;
 	Display* pDisplay = nullptr;
+	Input* pInput = nullptr;
 };
 
 class CPU

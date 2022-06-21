@@ -1,6 +1,9 @@
 # visual studio cache folder
 /.vs
 
+# visual code settings folder
+/.vscode
+
 # user specific files
 *.suo
 *.user

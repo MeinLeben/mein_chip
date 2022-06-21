@@ -1,7 +1,8 @@
 #include "pch.h"
-#include "CPU.h"
-#include "memory.h"
+#include "cpu.h"
 #include "display.h"
+#include "input.h"
+#include "memory.h"
 
 #define VERBOSE 1
 
@@ -36,7 +37,9 @@ uint16_t CPU::fetch(Memory* pMemory) {
 }
 
 void CPU::execute(uint16_t instruction, Bus* pBus) {
+#if VERBOSE
 	log_instruction(instruction);
+#endif
 	uint16_t opcode = instruction;
 	switch (instruction >> 12) {
 	case 0x0:
@@ -76,6 +79,14 @@ uint8_t CPU::ADD(uint16_t instruction, Bus* pBus) {
 #endif
 		m_v[(instruction & 0x0F00) >> 8] += (uint8_t)(instruction & 0x00FF);
 		break;
+	case 0xF:
+#if VERBOSE
+		std::cout << "Fx1E - ADD I, Vx" << std::endl;
+#endif
+		m_i += m_v[(instruction & 0x0F00) >> 8];
+		break;
+	default:
+		assert(false);
 	}
 
 	return 0;
@@ -119,7 +130,7 @@ uint8_t CPU::DRW(uint16_t instruction, Bus* pBus) {
 	std::cout << "Dxyn - DRW Vx, Vy, nibble" << std::endl;
 #endif
 	if (!pBus->pDisplay) {
-		std::cerr << "No display on found." << std::endl;
+		std::cerr << "No display found." << std::endl;
 		return 0;
 	}
 
@@ -171,6 +182,19 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus) {
 #endif
 			m_v[(instruction & 0x0F00) >> 8] = m_dt;
 			break;
+		case 0x0A:
+		{
+#if VERBOSE
+			std::cout << "Fx0A - LD Vx, K" << std::endl;
+#endif
+			int8_t key = 0;
+			if (pBus->pInput && pBus->pInput->is_any_key_pressed(key)) {
+				m_v[(instruction & 0x0F00) >> 8] = key;
+			} else {
+				m_pc -= 2;
+			}
+			break;
+		}
 		case 0x15:
 #if VERBOSE
 			std::cout << "Fx15 - LD DT, Vx" << std::endl;
@@ -189,6 +213,26 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus) {
 #endif
 			m_i = pBus->pMemory->read_font_address(m_v[(instruction & 0x0F00) >> 8]);
 			break;
+		case 0x55:
+		{
+#if VERBOSE
+			std::cout << "Fx55 - LD [I], Vx" << std::endl;
+#endif
+			uint8_t n = (instruction & 0x0F00) >> 8;
+			for (uint8_t i = 0; i <= n; i++) {
+				pBus->pMemory->write_byte(m_i + i, m_v[i]);
+			}
+		} break;
+		case 0x65:
+		{
+#if VERBOSE
+			std::cout << "Fx65 - LD Vx, [I]" << std::endl;
+#endif
+			uint8_t n = (instruction & 0x0F00) >> 8;
+			for (uint8_t i = 0; i <= n; i++) {
+				m_v[i] = pBus->pMemory->read_byte(m_i + i);
+			}
+		} break;
 		default:
 			assert(false);
 		}
@@ -209,6 +253,9 @@ uint8_t CPU::OR(uint16_t instruction, Bus* pBus) {
 uint8_t CPU::RET(uint16_t instruction, Bus* pBus) {
 	switch (instruction >> 12) {
 	case 0x0:
+#if VERBOSE
+		std::cout << "00EE - RET" << std::endl;
+#endif
 		m_pc = m_stack[--m_sp];
 		break;
 	default:
@@ -245,6 +292,15 @@ uint8_t CPU::SE(uint16_t instruction, Bus* pBus) {
 
 uint8_t CPU::SHL(uint16_t instruction, Bus* pBus) {
 	switch (instruction >> 12) {
+	case 0x8:
+	{
+#if VERBOSE
+		std::cout << "8xyE - SHL Vx {, Vy}." << std::endl;
+#endif
+		uint8_t x = m_v[(instruction & 0x0F00) >> 8];
+		m_v[0xF] = x & 0x80;
+		m_v[(instruction & 0x0F00) >> 8] = x << 1;
+	} break;
 	default:
 		assert(false);
 	}
@@ -254,6 +310,15 @@ uint8_t CPU::SHL(uint16_t instruction, Bus* pBus) {
 
 uint8_t CPU::SHR(uint16_t instruction, Bus* pBus) {
 	switch (instruction >> 12) {
+	case 0x8:
+	{
+#if VERBOSE
+		std::cout << "8xy6 - SHR Vx {, Vy}" << std::endl;
+#endif
+		uint8_t x = m_v[(instruction & 0x0F00) >> 8];
+		m_v[0xF] = x & 0x01;
+		m_v[(instruction & 0x0F00) >> 8] = x >> 1;
+	} break;
 	default:
 		assert(false);
 	}
@@ -279,18 +344,33 @@ uint8_t CPU::SNE(uint16_t instruction, Bus* pBus) {
 }
 
 uint8_t CPU::SKP(uint16_t instruction, Bus* pBus) {
-	switch (instruction >> 12) {
-	default:
-		assert(false);
+	if (!pBus->pInput) {
+		std::cerr << "No input found." << std::endl;
+		return 0;
+	}
+
+#if VERBOSE
+	std::cout << "Ex9E - SKP Vx" << std::endl;
+#endif
+	if (pBus->pInput->is_key_pressed(m_v[(instruction & 0x0F00) >> 8])) {
+		m_pc += 2;
 	}
 
 	return 0;
 }
 
 uint8_t CPU::SKNP(uint16_t instruction, Bus* pBus) {
-	switch (instruction >> 12) {
-	default:
-		assert(false);
+	if (!pBus->pInput) {
+		std::cerr << "No input found." << std::endl;
+		return 0;
+	}
+
+#if VERBOSE
+	std::cout << "ExA1 - SKNP Vx" << std::endl;
+#endif
+	uint8_t key = m_v[(instruction & 0x0F00) >> 8];
+	if (!pBus->pInput->is_key_pressed(key)) {
+		m_pc += 2;
 	}
 
 	return 0;

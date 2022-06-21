@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "display.h"
+#include "input.h"
 #include "loader.h"
 #include "memory.h"
 #include "cpu.h"
@@ -35,6 +36,7 @@ private:
 
 		delete m_pCPU;
 		delete m_pMemory;
+		delete m_pInput;
 		delete m_pDisplay;
 	}
 
@@ -72,8 +74,9 @@ private:
 		const uint32_t x = width / 2 - display_width * display_pixel_scale / 2;
 
 		m_pDisplay = new Display(x, 20, display_pixel_scale, display_width, display_height);
+		m_pInput = new Input;
 		m_pMemory = new Memory(4096);
-		m_pCPU = new CPU();
+		m_pCPU = new CPU;
 
 		m_initialized = true;
 
@@ -101,21 +104,41 @@ private:
 
 		SDL_Event event;
 
+		bool pause = true, step = false;
 		uint32_t previous_time = 0;
 		while (true) {
 			while (SDL_PollEvent(&event)) {
-				if (event.type == SDL_QUIT ||
-					event.key.keysym.sym == SDLK_ESCAPE) {
+				if (event.type == SDL_QUIT) {
 					return 0;
 				}
+				if (event.type == SDL_KEYUP) {
+					switch(event.key.keysym.sym) {
+					case SDLK_ESCAPE:
+						return 0;
+					case SDLK_n:
+						step = pause;
+						break;
+					case SDLK_SPACE:
+						pause = !pause;
+						break;
+					case SDLK_TAB:
+						m_pInput->use_virtual_keypad(!m_pInput->is_using_virtual_keypad());
+						break;
+					default:
+						break;
+					}
+				}
+
+				m_pInput->handle_event(&event);
 			}
 
 			uint32_t current_time = SDL_GetTicks();
 			float delta = (float)(current_time - previous_time);
-			if (delta > 1000 / 60.0f) {
-				Bus bus = { m_pMemory, m_pDisplay };
+			if (delta > 1000 / 60.0f && (!pause || step)) {
+				Bus bus = { m_pMemory, m_pDisplay, m_pInput };
 				m_pCPU->tick(&bus);
 				previous_time = current_time;
+				step = false;
 			}
 
 			render();
@@ -146,6 +169,7 @@ private:
 	Rom m_rom = {};
 
 	Display* m_pDisplay = nullptr;
+	Input* m_pInput = nullptr;
 	Memory* m_pMemory = nullptr;
 	CPU* m_pCPU = nullptr;
 };
