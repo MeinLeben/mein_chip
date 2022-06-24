@@ -1,8 +1,9 @@
+#include "cpu.h"
+#include "debugger.h"
 #include "display.h"
 #include "input.h"
 #include "loader.h"
 #include "memory.h"
-#include "cpu.h"
 
 class MeinChip {
 public:
@@ -36,12 +37,21 @@ private:
 		delete m_pMemory;
 		delete m_pInput;
 		delete m_pDisplay;
+
+#if USE_DEBUGGER
+		delete m_pDebugger;
+#endif
 	}
 
 	bool initialize(const char* pTitle, int32_t width, int32_t height) {
 
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0) {
 			std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
+			return false;
+		}
+
+		if (TTF_Init() < 0) {
+			std::cerr << "Failed to initialize TTF: " << TTF_GetError() << std::endl;
 			return false;
 		}
 
@@ -65,6 +75,10 @@ private:
 			return false;
 		}
 
+#if USE_DEBUGGER
+		m_pDebugger = new Debugger;
+		m_pDebugger->initialize(m_pWindow);
+#endif
 		const uint32_t display_width = 64;
 		const uint32_t display_height = 32;
 		const uint32_t display_pixel_scale = 10;
@@ -75,6 +89,8 @@ private:
 		m_pInput = new Input;
 		m_pMemory = new Memory(4096);
 		m_pCPU = new CPU;
+
+		SDL_RaiseWindow(m_pWindow);
 
 		m_initialized = true;
 
@@ -170,6 +186,9 @@ private:
 	Input* m_pInput = nullptr;
 	Memory* m_pMemory = nullptr;
 	CPU* m_pCPU = nullptr;
+#if USE_DEBUGGER
+	Debugger* m_pDebugger = nullptr;
+#endif
 };
 
 int32_t main(int32_t argc, char* argv[]) {
