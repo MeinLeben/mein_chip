@@ -122,29 +122,54 @@ private:
 		uint32_t previous_time = 0;
 		while (true) {
 			while (SDL_PollEvent(&event)) {
-				if (event.type == SDL_QUIT) {
-					return 0;
-				}
-				if (event.type == SDL_KEYUP) {
-					switch(event.key.keysym.sym) {
-					case SDLK_ESCAPE:
+				if (event.window.windowID == SDL_GetWindowID(m_pWindow)) {
+					if (event.type == SDL_QUIT) {
 						return 0;
-					case SDLK_n:
-						step = pause;
-						break;
-					case SDLK_SPACE:
-						pause = !pause;
-						break;
-					case SDLK_TAB:
-						m_pInput->use_virtual_keypad(!m_pInput->is_using_virtual_keypad());
-						break;
-					default:
-						break;
+					}
+
+					if (event.type == SDL_WINDOWEVENT) {
+						switch(event.window.event) {
+						case SDL_WINDOWEVENT_CLOSE:
+							return 0;
+						case SDL_WINDOWEVENT_MINIMIZED:
+							m_pDebugger->minimize();
+							break;
+						case SDL_WINDOWEVENT_SHOWN:
+							m_pDebugger->restore();
+							break;
+						default:
+							break;
+						}
+					}
+
+					if (event.type == SDL_KEYUP) {
+						switch(event.key.keysym.scancode) {
+						case SDL_SCANCODE_ESCAPE:
+							return 0;
+						case SDL_SCANCODE_F12:
+							m_pDebugger->show(!m_pDebugger->is_visible());
+							SDL_RaiseWindow(m_pWindow);
+							break;
+						case SDL_SCANCODE_N:
+							step = pause;
+							break;
+						case SDL_SCANCODE_SPACE:
+							pause = !pause;
+							break;
+						case SDL_SCANCODE_TAB:
+							m_pInput->use_virtual_keypad(!m_pInput->is_using_virtual_keypad());
+							break;
+						default:
+							break;
+						}
 					}
 				}
 
+				m_pDebugger->handle_event(&event);
 				m_pInput->handle_event(&event);
 			}
+
+			m_pDebugger->tick();
 
 			uint32_t current_time = SDL_GetTicks();
 			float delta = (float)(current_time - previous_time);
