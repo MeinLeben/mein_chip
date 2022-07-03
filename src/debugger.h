@@ -48,7 +48,8 @@ private:
 	SDL_Window* m_pWindow = nullptr;
 	SDL_Renderer* m_pRenderer = nullptr;
 
-	class TextField* m_pTextField = nullptr;
+	class Font* m_pFont = nullptr;
+	class Text* m_pText = nullptr;
 
 	void update();
 	void render();
