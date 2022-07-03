@@ -75,6 +75,6 @@ void Debugger::tick() {
 void Debugger::render() {
 	SDL_SetRenderDrawColor(m_pRenderer, 32, 32, 64, 255);
 	SDL_RenderClear(m_pRenderer);
-	m_pText->draw("Hello!\nHello MeinLEBEN", 10, 10);
+	m_pText->draw("Hello!\nHello Mein\tLEBEN", 10, 10);
 	SDL_RenderPresent(m_pRenderer);
 }
