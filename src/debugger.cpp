@@ -23,6 +23,7 @@ bool Debugger::initialize(SDL_Window* pWindow) {
 
 	if (!m_pWindow) {
 		std::cerr << "[Debugger] Failed to create window: " << SDL_GetError() << std::endl;
+		destroy();
 		return false;
 	}
 
@@ -30,11 +31,16 @@ bool Debugger::initialize(SDL_Window* pWindow) {
 
 	if (!m_pRenderer) {
 		std::cerr << "[Debugger] Failed to create renderer: " << SDL_GetError() << std::endl;
+		destroy();
 		return false;
 	}
 
-	m_pFont = new Font("data/font/punk-mono/punk-mono-regular.ttf", m_pRenderer);
-	m_pText = new Text(m_pFont);
+	m_pText = new Text(m_pRenderer);
+	m_font = m_pText->add_font("data/font/punk-mono/punk-mono-regular.ttf").second;
+	if (m_font == Font::kInvalidHandle) {
+		destroy();
+		return false;
+	}
 
 	m_initialized = true;
 	
@@ -42,12 +48,10 @@ bool Debugger::initialize(SDL_Window* pWindow) {
 }
 
 void Debugger::destroy() {
-	if (!m_initialized) {
-		return;
-	}
+	m_font = Font::kInvalidHandle;
 
 	delete m_pText;
-	delete m_pFont;
+	m_pText = nullptr;
 
 	SDL_DestroyRenderer(m_pRenderer);
 	m_pRenderer = nullptr;
@@ -59,6 +63,10 @@ void Debugger::destroy() {
 }
 
 void Debugger::handle_event(SDL_Event* pEvent) {
+	if (!m_initialized) {
+		return;
+	}
+
 	if (!pEvent || pEvent->window.windowID != SDL_GetWindowID(m_pWindow)) {
 		return;
 	}
@@ -69,12 +77,16 @@ void Debugger::handle_event(SDL_Event* pEvent) {
 }
 
 void Debugger::tick() {
+	if (!m_initialized) {
+		return;
+	}
+
 	render();
 }
 
 void Debugger::render() {
 	SDL_SetRenderDrawColor(m_pRenderer, 32, 32, 64, 255);
 	SDL_RenderClear(m_pRenderer);
-	m_pText->draw("Hello!\nHello Mein\tLEBEN", 10, 10);
+	m_pText->draw("Hello!\nHello Mein\tLEBEN", 10, 10, m_font);
 	SDL_RenderPresent(m_pRenderer);
 }

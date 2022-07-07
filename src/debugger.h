@@ -6,6 +6,8 @@
 #define USE_DEBUGGER 0
 #endif
 
+#include "font.h"
+
 class Debugger {
 public:
 	~Debugger();
@@ -48,7 +50,7 @@ private:
 	SDL_Window* m_pWindow = nullptr;
 	SDL_Renderer* m_pRenderer = nullptr;
 
-	class Font* m_pFont = nullptr;
+	Font::Handle m_font = Font::kInvalidHandle;
 	class Text* m_pText = nullptr;
 
 	void update();

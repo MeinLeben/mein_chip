@@ -1,13 +1,18 @@
 #pragma once
 
-class Font;
+#include "font.h"
+
 class Text {
 public:
-	Text(Font* pDefaultFont)
-		: m_pDefaultFont(pDefaultFont) {};
+	Text(SDL_Renderer* pRenderer);
+	~Text();
 
-	void draw(const char* pText, int32_t x, int32_t y, Font* pFont = nullptr);
+	inline std::pair<bool, Font::Handle> add_font(const std::string& font_path) {
+		return m_pFontManager->add(font_path);
+	}
+
+	void draw(const char* pText, int32_t x, int32_t y, Font::Handle font);
 
 private:
-	Font* m_pDefaultFont = nullptr;
+	FontManager* m_pFontManager = nullptr;
 };

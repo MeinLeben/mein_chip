@@ -1,14 +1,11 @@
 #include "font.h"
 
-static const int32_t kFontSize = 16;
+const Font::Handle Font::kInvalidHandle = -1;
+
 static const int32_t kFontAtlasSize = 512;
 
-Font::Font(const char* pFontPath, SDL_Renderer* pRenderer)
-	: Font(TTF_OpenFont(pFontPath, kFontSize), pRenderer) {
-}
-
-Font::Font(TTF_Font* pFont, SDL_Renderer* pRenderer)
-	: m_pRenderer(pRenderer) {
+Font::Font(TTF_Font* pFont, const std::string& path, SDL_Renderer* pRenderer) 
+	: m_path(path) {
 	if (!pFont) {
 		std::runtime_error("No valid TTF font.");
 	}
@@ -50,4 +47,33 @@ Font::Font(TTF_Font* pFont, SDL_Renderer* pRenderer)
 
 Font::~Font() {
 	SDL_DestroyTexture(m_pAtlas);
+}
+
+FontManager::~FontManager() {
+	for (auto iter : m_fonts) {
+		delete iter.second;
+	}
+}
+
+std::pair<bool, Font::Handle> FontManager::add(const std::string& font_path) {
+	Font::Handle handle = find(font_path);
+	if (handle != Font::kInvalidHandle) {
+		return {false, handle}; 
+	}
+
+	/* CFR TODO removal of kFontSize:
+	 * Still using a fixed font size here, font size should become variable instead.
+	 * Problems that need to be resolved are:
+	 * Fixed atlas size:
+	 * 	The current fixed atlas size which might become to small.
+	 * 	This should be solvable by calculating the atlas size since we know the glyh size and count.
+	 * Unique key:
+	 * 	Currently we use the font path as the key identifier.
+	 * 	Since we could now have multiple fonts with the same font path.
+	 */
+
+	Font* pFont = new Font(TTF_OpenFont(font_path.c_str(), kFontSize), font_path, m_pRenderer);
+	m_fonts.insert({++m_lastHandle, pFont});
+
+	return {true, m_lastHandle};
 }

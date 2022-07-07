@@ -1,13 +1,21 @@
 #include "text.h"
 
-#include "font.h"
+Text::Text(SDL_Renderer* pRenderer) {
+	m_pFontManager = new FontManager(pRenderer);
+}
 
-void Text::draw(const char* pText, int32_t x, int32_t y, Font* pFont) {
+Text::~Text() {
+	delete m_pFontManager;
+}
+
+void Text::draw(const char* pText, int32_t x, int32_t y, Font::Handle font_handle ) {
+	const Font* pFont = m_pFontManager->get(font_handle);
 	if (!pFont) {
-		pFont = m_pDefaultFont;
+		std::cerr << "Invalid font handle: " << font_handle << std::endl;
+		return;
 	}
 
-	const Font::Glyph* pGlyphs = pFont->GetGlyphs();
+	const Font::Glyph* pGlyphs = pFont->get_glyphs();
 	SDL_Rect dst = {};
 	int32_t x_start = x;
 	char c = *pText++;
@@ -26,7 +34,7 @@ void Text::draw(const char* pText, int32_t x, int32_t y, Font* pFont) {
 		dst.w = pGlyphs[c].w;
 		dst.h = pGlyphs[c].h;
 
-		SDL_RenderCopy(pFont->GetRenderer(), pFont->GetAtlas(), &pGlyphs[c], &dst);
+		SDL_RenderCopy(m_pFontManager->get_renderer(), pFont->get_atlas(), &pGlyphs[c], &dst);
 		x += dst.w;
 		c = *pText++;
 	}
