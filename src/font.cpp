@@ -6,10 +6,6 @@ static const int32_t kFontAtlasSize = 512;
 
 Font::Font(TTF_Font* pFont, const std::string& path, SDL_Renderer* pRenderer) 
 	: m_path(path) {
-	if (!pFont) {
-		std::runtime_error("No valid TTF font.");
-	}
-
 	SDL_Surface* pAtlasSurface = SDL_CreateRGBSurface(0, kFontAtlasSize, kFontAtlasSize, 32, 0, 0, 0, 255);
 	SDL_SetColorKey(pAtlasSurface, SDL_TRUE, SDL_MapRGBA(pAtlasSurface->format, 0, 0, 0, 0));
 
@@ -72,7 +68,15 @@ std::pair<bool, Font::Handle> FontManager::add(const std::string& font_path) {
 	 * 	Since we could now have multiple fonts with the same font path.
 	 */
 
-	Font* pFont = new Font(TTF_OpenFont(font_path.c_str(), kFontSize), font_path, m_pRenderer);
+	TTF_Font* pTTF_Font = TTF_OpenFont(font_path.c_str(), kFontSize);
+	if (!pTTF_Font) {
+		return {false, Font::kInvalidHandle};
+	}
+
+	Font* pFont = new Font(pTTF_Font, font_path, m_pRenderer);
+	
+	TTF_CloseFont(pTTF_Font);
+
 	m_fonts.insert({++m_lastHandle, pFont});
 
 	return {true, m_lastHandle};

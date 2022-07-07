@@ -1,73 +1,32 @@
 #include "debugger.h"
 
-#include "font.h"
-#include "text.h"
-
-Debugger::~Debugger() {
-	destroy();
-}
-
-bool Debugger::initialize(SDL_Window* pWindow) {
+Debugger::Debugger(SDL_Window* pParent) {
 	int32_t x = SDL_WINDOWPOS_UNDEFINED;
 	int32_t y = SDL_WINDOWPOS_UNDEFINED;
 
-	if (pWindow) {
+	if (pParent) {
 		int32_t w, h;
-		SDL_GetWindowPosition(pWindow, &x, &y);
-		SDL_GetWindowSize(pWindow, &w, &h);
+		SDL_GetWindowPosition(pParent, &x, &y);
+		SDL_GetWindowSize(pParent, &w, &h);
 
 		x += w + 20;
 	}
 
-	m_pWindow = SDL_CreateWindow("Debugger", x, y, 240, 320, 0);
-
-	if (!m_pWindow) {
-		std::cerr << "[Debugger] Failed to create window: " << SDL_GetError() << std::endl;
-		destroy();
-		return false;
-	}
-
-	m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, SDL_RENDERER_ACCELERATED);
-
-	if (!m_pRenderer) {
-		std::cerr << "[Debugger] Failed to create renderer: " << SDL_GetError() << std::endl;
-		destroy();
-		return false;
-	}
-
-	m_pText = new Text(m_pRenderer);
-	m_font = m_pText->add_font("data/font/punk-mono/punk-mono-regular.ttf").second;
-	if (m_font == Font::kInvalidHandle) {
-		destroy();
-		return false;
-	}
-
-	m_initialized = true;
+	m_window = std::make_unique<SDLWrapper::Window>("Debugger", x, y, 240, 320, 0);
 	
-	return true;
-}
-
-void Debugger::destroy() {
-	m_font = Font::kInvalidHandle;
-
-	delete m_pText;
-	m_pText = nullptr;
-
-	SDL_DestroyRenderer(m_pRenderer);
-	m_pRenderer = nullptr;
-
-	SDL_DestroyWindow(m_pWindow);
-	m_pWindow = nullptr;
-
-	m_initialized = false;
+	m_renderer = std::make_unique<SDLWrapper::Renderer>(m_window->get(), -1, SDL_RENDERER_ACCELERATED);
+ 
+ 	m_text = std::make_unique<Text>(m_renderer->get());
+	
+	const std::string font_path = "data/font/punk-mono/punk-mono-regular.ttf";
+	m_font = m_text->add_font(font_path).second;
+	if (m_font == Font::kInvalidHandle) {
+		throw std::runtime_error("Failed to load font: " + font_path);
+	}
 }
 
 void Debugger::handle_event(SDL_Event* pEvent) {
-	if (!m_initialized) {
-		return;
-	}
-
-	if (!pEvent || pEvent->window.windowID != SDL_GetWindowID(m_pWindow)) {
+	if (!pEvent || pEvent->window.windowID != SDL_GetWindowID(m_window->get())) {
 		return;
 	}
 
@@ -77,16 +36,12 @@ void Debugger::handle_event(SDL_Event* pEvent) {
 }
 
 void Debugger::tick() {
-	if (!m_initialized) {
-		return;
-	}
-
 	render();
 }
 
 void Debugger::render() {
-	SDL_SetRenderDrawColor(m_pRenderer, 32, 32, 64, 255);
-	SDL_RenderClear(m_pRenderer);
-	m_pText->draw("Hello!\nHello Mein\tLEBEN", 10, 10, m_font);
-	SDL_RenderPresent(m_pRenderer);
+	SDL_SetRenderDrawColor(m_renderer->get(), 32, 32, 64, 255);
+	SDL_RenderClear(m_renderer->get());
+	m_text->draw("Hello!\nHello Mein\tLEBEN", 10, 10, m_font);
+	SDL_RenderPresent(m_renderer->get());
 }

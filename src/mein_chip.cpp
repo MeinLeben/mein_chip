@@ -38,9 +38,6 @@ private:
 		delete m_pInput;
 		delete m_pDisplay;
 
-#if USE_DEBUGGER
-		delete m_pDebugger;
-#endif
 	}
 
 	bool initialize(const char* pTitle, int32_t width, int32_t height) {
@@ -76,8 +73,7 @@ private:
 		}
 
 #if USE_DEBUGGER
-		m_pDebugger = new Debugger;
-		m_pDebugger->initialize(m_pWindow);
+		m_debugger = Debugger::create(m_pWindow);
 #endif
 		const uint32_t display_width = 64;
 		const uint32_t display_height = 32;
@@ -132,10 +128,14 @@ private:
 						case SDL_WINDOWEVENT_CLOSE:
 							return 0;
 						case SDL_WINDOWEVENT_MINIMIZED:
-							m_pDebugger->minimize();
+							if (m_debugger) {
+								m_debugger->minimize();
+							}
 							break;
 						case SDL_WINDOWEVENT_SHOWN:
-							m_pDebugger->restore();
+							if (m_debugger) {
+								m_debugger->restore();
+							}
 							break;
 						default:
 							break;
@@ -147,7 +147,9 @@ private:
 						case SDL_SCANCODE_ESCAPE:
 							return 0;
 						case SDL_SCANCODE_F12:
-							m_pDebugger->show(!m_pDebugger->is_visible());
+							if (m_debugger) {
+								m_debugger->show(!m_debugger->is_visible());
+							}
 							SDL_RaiseWindow(m_pWindow);
 							break;
 						case SDL_SCANCODE_N:
@@ -165,11 +167,15 @@ private:
 					}
 				}
 
-				m_pDebugger->handle_event(&event);
+				if (m_debugger) {
+					m_debugger->handle_event(&event);
+				}
 				m_pInput->handle_event(&event);
 			}
 
-			m_pDebugger->tick();
+			if (m_debugger) {
+				m_debugger->tick();
+			}
 
 			uint32_t current_time = SDL_GetTicks();
 			float delta = (float)(current_time - previous_time);
@@ -212,7 +218,7 @@ private:
 	Memory* m_pMemory = nullptr;
 	CPU* m_pCPU = nullptr;
 #if USE_DEBUGGER
-	Debugger* m_pDebugger = nullptr;
+	std::unique_ptr<Debugger> m_debugger;
 #endif
 };
 

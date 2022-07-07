@@ -6,53 +6,61 @@
 #define USE_DEBUGGER 0
 #endif
 
+#include "sdl_wrapper.h"
 #include "font.h"
+#include "text.h"
 
 class Debugger {
 public:
-	~Debugger();
-
-	bool initialize(SDL_Window* pWindow = nullptr);
-	void destroy();
+	static std::unique_ptr<Debugger> create(SDL_Window* pParent) {
+		try {
+			std::unique_ptr<Debugger> debugger(new Debugger(pParent));
+			return debugger;
+		} catch (std::exception& e) {
+			std::cerr << "Failed to create the debugger window: " << e.what() << std::endl;
+		}
+		return nullptr;
+	}
 
 	void handle_event(SDL_Event* pEvent);
 	void tick();
 
 	inline void show(bool show) {
 		if (show) {
-			SDL_ShowWindow(m_pWindow);
+			SDL_ShowWindow(m_window->get());
 		} else {
-			SDL_HideWindow(m_pWindow);
+			SDL_HideWindow(m_window->get());
 		}
-		m_is_visible = show;
+		m_visible = show;
 	}
 
 	inline void minimize() {
-		if (m_is_visible) {
-			SDL_MinimizeWindow(m_pWindow);
+		if (m_visible) {
+			SDL_MinimizeWindow(m_window->get());
 		}
 	}
 
 	inline void restore() {
-		if (m_is_visible) {
-			SDL_RestoreWindow(m_pWindow);
+		if (m_visible) {
+			SDL_RestoreWindow(m_window->get());
 		}
 	}
 
 	inline bool is_visible() const {
-		return m_is_visible;
+		return m_visible;
 	}
 
 private:
-	bool m_initialized = false;
-	bool m_is_visible = true;
-
-	SDL_Window* m_pWindow = nullptr;
-	SDL_Renderer* m_pRenderer = nullptr;
-
-	Font::Handle m_font = Font::kInvalidHandle;
-	class Text* m_pText = nullptr;
+	Debugger(SDL_Window* pParent = nullptr);
 
 	void update();
 	void render();
+
+	bool m_visible = true;
+
+	Font::Handle m_font = Font::kInvalidHandle;
+
+	std::unique_ptr<SDLWrapper::Window> m_window;
+	std::unique_ptr<SDLWrapper::Renderer> m_renderer;
+	std::unique_ptr<Text> m_text;
 };

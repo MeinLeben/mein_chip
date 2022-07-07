@@ -7,6 +7,7 @@
 #include <exception>
 #include <iostream>
 #include <iomanip>
+#include <memory>
 #include <unordered_map>
 
 #define SDL_MAIN_HANDLED
