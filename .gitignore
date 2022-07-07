@@ -2,7 +2,7 @@
 /.vs
 
 # visual code settings folder
-/.vscode
+#/.vscode
 
 # user specific files
 *.suo
