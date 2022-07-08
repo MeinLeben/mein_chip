@@ -2,11 +2,13 @@
 
 const Font::Handle Font::kInvalidHandle = -1;
 
-static const int32_t kFontAtlasSize = 512;
+Font::Font(TTF_Font* pFont, const std::string& path, int32_t size, SDL_Renderer* pRenderer) 
+	: m_path(path)
+	, m_size(size) {
 
-Font::Font(TTF_Font* pFont, const std::string& path, SDL_Renderer* pRenderer) 
-	: m_path(path) {
-	SDL_Surface* pAtlasSurface = SDL_CreateRGBSurface(0, kFontAtlasSize, kFontAtlasSize, 32, 0, 0, 0, 255);
+	const int32_t height = TTF_FontHeight(pFont);
+	const int32_t font_atlas_size = height * (int32_t)sqrt((float)kNumCharacters);
+	SDL_Surface* pAtlasSurface = SDL_CreateRGBSurface(0, font_atlas_size, font_atlas_size, 32, 0, 0, 0, 255);
 	SDL_SetColorKey(pAtlasSurface, SDL_TRUE, SDL_MapRGBA(pAtlasSurface->format, 0, 0, 0, 0));
 
 	SDL_Rect dst = {};
@@ -19,12 +21,12 @@ Font::Font(TTF_Font* pFont, const std::string& path, SDL_Renderer* pRenderer)
 
 		TTF_SizeText(pFont, text, &dst.w, &dst.h);
 
-		if (dst.x + dst.w >= kFontAtlasSize) {
+		if (dst.x + dst.w >= font_atlas_size) {
 			dst.x = 0;
 			dst.y += dst.h + 1;
-			if (dst.y + dst.h >= kFontAtlasSize) {
+			if (dst.y + dst.h >= font_atlas_size) {
 				SDL_FreeSurface(pSurface);
-				std::runtime_error("Failed to generate font texture atlas");
+				throw std::runtime_error("Failed to generate font texture atlas");
 			}
 		}
 
@@ -41,39 +43,18 @@ Font::Font(TTF_Font* pFont, const std::string& path, SDL_Renderer* pRenderer)
 	SDL_FreeSurface(pAtlasSurface);
 }
 
-Font::~Font() {
-	SDL_DestroyTexture(m_pAtlas);
-}
-
-FontManager::~FontManager() {
-	for (auto iter : m_fonts) {
-		delete iter.second;
-	}
-}
-
-std::pair<bool, Font::Handle> FontManager::add(const std::string& font_path) {
-	Font::Handle handle = find(font_path);
+std::pair<bool, Font::Handle> FontManager::add(SDL_Renderer* renderer, const std::string& font_path, int32_t font_size) {
+	Font::Handle handle = find(font_path, font_size);
 	if (handle != Font::kInvalidHandle) {
 		return {false, handle}; 
 	}
 
-	/* CFR TODO removal of kFontSize:
-	 * Still using a fixed font size here, font size should become variable instead.
-	 * Problems that need to be resolved are:
-	 * Fixed atlas size:
-	 * 	The current fixed atlas size which might become to small.
-	 * 	This should be solvable by calculating the atlas size since we know the glyh size and count.
-	 * Unique key:
-	 * 	Currently we use the font path as the key identifier.
-	 * 	Since we could now have multiple fonts with the same font path.
-	 */
-
-	TTF_Font* pTTF_Font = TTF_OpenFont(font_path.c_str(), kFontSize);
+	TTF_Font* pTTF_Font = TTF_OpenFont(font_path.c_str(), font_size);
 	if (!pTTF_Font) {
 		return {false, Font::kInvalidHandle};
 	}
 
-	Font* pFont = new Font(pTTF_Font, font_path, m_pRenderer);
+	Font* pFont = new Font(pTTF_Font, font_path, font_size, renderer);
 	
 	TTF_CloseFont(pTTF_Font);
 

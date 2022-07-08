@@ -62,5 +62,8 @@ private:
 
 	std::unique_ptr<SDLWrapper::Window> m_window;
 	std::unique_ptr<SDLWrapper::Renderer> m_renderer;
-	std::unique_ptr<Text> m_text;
+	std::unique_ptr<TextManager> m_text_manager;
+
+	TextLabel* m_text_label = nullptr;
+	TextField* m_text_field = nullptr;
 };
