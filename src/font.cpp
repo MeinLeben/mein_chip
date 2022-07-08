@@ -2,9 +2,10 @@
 
 const Font::Handle Font::kInvalidHandle = -1;
 
-Font::Font(TTF_Font* pFont, const std::string& path, int32_t size, SDL_Renderer* pRenderer) 
+Font::Font(TTF_Font* pFont, const std::string& path, int32_t size, SDL_Color color, SDL_Renderer* pRenderer) 
 	: m_path(path)
-	, m_size(size) {
+	, m_size(size)
+	, m_color(color) {
 
 	const int32_t height = TTF_FontHeight(pFont);
 	const int32_t font_atlas_size = height * (int32_t)sqrt((float)kNumCharacters);
@@ -17,9 +18,12 @@ Font::Font(TTF_Font* pFont, const std::string& path, int32_t size, SDL_Renderer*
 	for (char c = start; c <= end;c++) {
 		char text[2] = {c, 0};
 
-		pSurface = TTF_RenderUTF8_Blended(pFont, text, {255, 255, 255, 255});
+		pSurface = TTF_RenderUTF8_Blended(pFont, text, color);
 
 		TTF_SizeText(pFont, text, &dst.w, &dst.h);
+		if (dst.h > m_height) {
+			m_height = dst.h;
+		}
 
 		if (dst.x + dst.w >= font_atlas_size) {
 			dst.x = 0;
@@ -43,18 +47,18 @@ Font::Font(TTF_Font* pFont, const std::string& path, int32_t size, SDL_Renderer*
 	SDL_FreeSurface(pAtlasSurface);
 }
 
-std::pair<bool, Font::Handle> FontManager::add(SDL_Renderer* renderer, const std::string& font_path, int32_t font_size) {
-	Font::Handle handle = find(font_path, font_size);
+std::pair<bool, Font::Handle> FontManager::add(SDL_Renderer* renderer, const std::string& path, int32_t size, SDL_Color color) {
+	Font::Handle handle = find(path, size);
 	if (handle != Font::kInvalidHandle) {
 		return {false, handle}; 
 	}
 
-	TTF_Font* pTTF_Font = TTF_OpenFont(font_path.c_str(), font_size);
+	TTF_Font* pTTF_Font = TTF_OpenFont(path.c_str(), size);
 	if (!pTTF_Font) {
 		return {false, Font::kInvalidHandle};
 	}
 
-	Font* pFont = new Font(pTTF_Font, font_path, font_size, renderer);
+	Font* pFont = new Font(pTTF_Font, path, size, color, renderer);
 	
 	TTF_CloseFont(pTTF_Font);
 

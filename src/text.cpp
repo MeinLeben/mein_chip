@@ -9,30 +9,36 @@ void TextBase::draw(SDL_Renderer* renderer, const std::unique_ptr<FontManager>& 
 		return;
 	}
 
-	SDL_Rect background = {m_x, m_y, m_w, m_h};
-	SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-	SDL_RenderFillRect(renderer, &background);
+	if (m_use_background) {
+		SDL_SetRenderDrawColor(renderer, m_background_color.r, m_background_color.g, m_background_color.b, m_background_color.a);
+		SDL_RenderFillRect(renderer, &m_size);
+	}
+
+	if (m_use_background_outline) {
+		SDL_SetRenderDrawColor(renderer, m_background_outline_color.r, m_background_outline_color.g, m_background_outline_color.b, m_background_outline_color.a);
+		SDL_RenderDrawRect(renderer, &m_size);
+	}
  
 	const char* text = m_text.c_str();
 	const Font::Glyph* pGlyphs = font->get_glyphs();
 	SDL_Rect dst = {};
-	int32_t x = m_x, y = m_y;
+	int32_t x = m_size.x, y = m_size.y;
 	char c = *text++;
 	while (c) {
 		if (c == '\n') {
 			y += dst.h;
-			x = m_x;
+			x = m_size.x;
 		}
 
 		if (c == '\t') {
 			x += pGlyphs[' '].w * 4;
 		}
 
-		if (y >= m_y + m_h) {
+		if (y >= m_size.y + m_size.h) {
 			break;
 		}
 
-		if (x < m_x + m_w) {
+		if (x < m_size.x + m_size.w) {
 			dst.x = x;
 			dst.y = y;
 			dst.w = pGlyphs[c].w;
@@ -52,7 +58,7 @@ void TextLabel::draw(SDL_Renderer* renderer, const std::unique_ptr<FontManager>&
 		return;
 	}
 
-	m_h = font->get_size();
+	m_size.h = font->get_height();
 	TextBase::draw(renderer, font_manager);
 }
 
@@ -66,25 +72,18 @@ TextManager::~TextManager() {
 	}
 }
 
-TextLabel* TextManager::create_text_label(const std::string& text, int32_t x, int32_t y, int32_t w, Font::Handle font) {
+TextLabel* TextManager::create_text_label(int32_t x, int32_t y, int32_t w, Font::Handle font) {
 	TextLabel* text_label = new TextLabel;
-	text_label->m_text = text;
-	text_label->m_x = x;
-	text_label->m_y = y;
-	text_label->m_w = w;
+	text_label->m_size = {x, y, w, text_label->m_size.h};
 	text_label->m_font = font;
 
 	m_elements.insert(text_label);
 	return text_label;
 }
 
-TextField* TextManager::create_text_field(const std::string& text, int32_t x, int32_t y, int32_t w, int32_t h, Font::Handle font) {
+TextField* TextManager::create_text_field(int32_t x, int32_t y, int32_t w, int32_t h, Font::Handle font) {
 	TextField* text_field = new TextField;
-	text_field->m_text = text;
-	text_field->m_x = x;
-	text_field->m_y = y;
-	text_field->m_w = w;
-	text_field->m_h = h;
+	text_field->m_size = {x, y, w, h};
 	text_field->m_font = font;
 
 	m_elements.insert(text_field);

@@ -19,13 +19,20 @@ Debugger::Debugger(SDL_Window* pParent) {
  	m_text_manager = std::make_unique<TextManager>();
 	
 	const std::string font_path = "data/font/punk-mono/punk-mono-regular.ttf";
-	m_font = m_text_manager->add_font(m_renderer->get(), font_path, 16).second;
+	m_font = m_text_manager->add_font(m_renderer->get(), font_path, 16, {255, 255, 0, 0}).second;
 	if (m_font == Font::kInvalidHandle) {
 		throw std::runtime_error("Failed to load font: " + font_path);
 	}
 
-	m_text_label = m_text_manager->create_text_label("test label\n new line test", 30, 30, 256, m_font);
-	m_text_field = m_text_manager->create_text_field("second test\n\n\nWHooah!\nZzZzzz label", 30, 46, 32, 128, m_font);
+	m_text_label = m_text_manager->create_text_label(0, 0, 220, m_font);
+	m_text_label->set_text("LJjt label\n new line test");
+	m_text_label->set_background_color({0, 0, 0, 255});
+	m_text_label->use_background(true);
+	m_text_label->set_background_outline_color({255, 255, 255, 255});
+	m_text_label->use_background_outline(true);
+
+	m_text_field = m_text_manager->create_text_field(30, 46, 32, 128, m_font);
+	m_text_field->set_text("second test\n\n\nWHooah!\nZzZzzz label");
 }
 
 void Debugger::handle_event(SDL_Event* pEvent) {
@@ -43,7 +50,7 @@ void Debugger::tick() {
 }
 
 void Debugger::render() {
-	SDL_SetRenderDrawColor(m_renderer->get(), 32, 32, 64, 255);
+	SDL_SetRenderDrawColor(m_renderer->get(), 0, 0, 0, 255);
 	SDL_RenderClear(m_renderer->get());
 	m_text_manager->draw(m_renderer->get());
 	SDL_RenderPresent(m_renderer->get());

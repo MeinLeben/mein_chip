@@ -20,12 +20,20 @@ public:
 		return m_path;
 	}
 
-	inline const int32_t get_size() const {
+	inline int32_t get_size() const {
 		return m_size;
 	}
 
+	inline int32_t get_height() const {
+		return m_height;
+	}
+
+	inline SDL_Color get_color() const {
+		return m_color;
+	}
+
 private:
-	Font(TTF_Font* pFont, const std::string& path, int32_t size, SDL_Renderer* pRenderer);
+	Font(TTF_Font* pFont, const std::string& path, int32_t size, SDL_Color color, SDL_Renderer* pRenderer);
 	~Font() {
 		SDL_DestroyTexture(m_pAtlas);
 	}
@@ -34,6 +42,8 @@ private:
 	SDL_Texture* m_pAtlas = nullptr;
 	std::string m_path = {};
 	int32_t m_size = 0;
+	int32_t m_height = 0;
+	SDL_Color m_color = {};
 	Handle m_handle = kInvalidHandle;
 
 	friend class FontManager;
@@ -47,12 +57,12 @@ public:
 		}
 	}
 
-	std::pair<bool, Font::Handle> add(SDL_Renderer* renderer, const std::string& font_path, int32_t font_size = 12);
+	std::pair<bool, Font::Handle> add(SDL_Renderer* renderer, const std::string& path, int32_t size = 12, SDL_Color color = {255, 255, 255, 255});
 
-	inline Font::Handle find(const std::string& font_path, int32_t font_size) const {
+	inline Font::Handle find(const std::string& path, int32_t size) const {
 		for (auto iter : m_fonts) {
-			if ((iter.second)->m_path == font_path &&
-				(iter.second)->m_size == font_size) {
+			if ((iter.second)->m_path == path &&
+				(iter.second)->m_size == size) {
 				return iter.first;
 			}
 		}
