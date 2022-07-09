@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 project(mein_chip)
 
 if (WIN32)
@@ -10,9 +13,6 @@ if (WIN32)
 endif()
 
 set(CMAKE_BUILD_TYPE Debug)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (WIN32)
 	set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/external/cmake/SDL2")
@@ -40,9 +40,10 @@ source_group("src" FILES ${SOURCE})
 add_executable(mein_chip ${SOURCE})
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT mein_chip)
+set_property(TARGET mein_chip PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:mein_chip>")
+set_target_properties(mein_chip PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "\"D:\\Development\\Data\\Roms\\chip8-roms\\programs\\Keypad Test [Hap, 2006].ch8\"")
 
 target_link_libraries(mein_chip ${SDL2_LIBRARIES} ${SDL2TTF_LIBRARY})
-
 target_precompile_headers(mein_chip PRIVATE src/pch.h)
 
 if (WIN32)

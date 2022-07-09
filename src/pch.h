@@ -1,9 +1,11 @@
 #pragma once
 
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
+#include <functional>
 #include <exception>
 #include <iostream>
 #include <iomanip>

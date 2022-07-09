@@ -146,7 +146,7 @@ private:
 						switch(event.key.keysym.scancode) {
 						case SDL_SCANCODE_ESCAPE:
 							return 0;
-						case SDL_SCANCODE_F12:
+						case SDL_SCANCODE_TAB:
 							if (m_debugger) {
 								m_debugger->show(!m_debugger->is_visible());
 							}
@@ -158,7 +158,7 @@ private:
 						case SDL_SCANCODE_SPACE:
 							pause = !pause;
 							break;
-						case SDL_SCANCODE_TAB:
+						case SDL_SCANCODE_K:
 							m_pInput->use_virtual_keypad(!m_pInput->is_using_virtual_keypad());
 							break;
 						default:
