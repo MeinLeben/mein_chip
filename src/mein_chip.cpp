@@ -5,6 +5,8 @@
 #include "loader.h"
 #include "memory.h"
 
+const SDL_Color background = {31, 31, 31, 255};
+
 class MeinChip {
 public:
 	static int32_t run(const char* pTitle, int32_t width, int32_t height, int32_t argc, char* argv[]) {
@@ -193,7 +195,7 @@ private:
 	}
 
 	void render() {
-		SDL_SetRenderDrawColor(m_pRenderer, 255, 95, 31, 255);
+		SDL_SetRenderDrawColor(m_pRenderer, background.r, background.g, background.b, background.a);
 		SDL_RenderClear(m_pRenderer);
 
 		m_pDisplay->draw(m_pRenderer);

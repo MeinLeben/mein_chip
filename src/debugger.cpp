@@ -1,5 +1,9 @@
 #include "debugger.h"
 
+const SDL_Color background = {31, 31, 31, 255};
+const SDL_Color text_background = {46, 46, 46, 255};
+const SDL_Color text_color = {206, 185, 114, 255};
+
 Debugger::Debugger(SDL_Window* pParent) {
 	int32_t x = SDL_WINDOWPOS_UNDEFINED;
 	int32_t y = SDL_WINDOWPOS_UNDEFINED;
@@ -19,43 +23,43 @@ Debugger::Debugger(SDL_Window* pParent) {
  	m_text_manager = std::make_unique<TextManager>();
 	
 	const std::string font_path = "data/font/punk-mono/punk-mono-regular.ttf";
-	m_font = m_text_manager->add_font(m_renderer->get(), font_path, 12, {255, 255, 0, 0}).second;
+	m_font = m_text_manager->add_font(m_renderer->get(), font_path, 12, text_color).second;
 	if (m_font == Font::kInvalidHandle) {
 		throw std::runtime_error("Failed to load font: " + font_path);
 	}
 
-	m_instruction = m_text_manager->create_text_label(10, 10, 256, m_font);
-	m_instruction->set_background_color({32, 32, 32, 255});
+	m_instruction = m_text_manager->create_text_label(10, 10, 278, m_font);
+	m_instruction->set_background_color(text_background);
 	m_instruction->use_background(true);
-	m_instruction_description = m_text_manager->create_text_label(10, 10 + 16 + 5, 256, m_font);
-	m_instruction_description->set_background_color({32, 32, 32, 255});
+	m_instruction_description = m_text_manager->create_text_label(10, 10 + 16 + 5, 278, m_font);
+	m_instruction_description->set_background_color(text_background);
 	m_instruction_description->use_background(true);
 
 	const int32_t offset_h = 10 + 16 + 5 + 16 + 5;
 	m_gp_registers = m_text_manager->create_text_field(10, offset_h, 72, 256, m_font);
-	m_gp_registers->set_background_color({32, 32, 32, 255});
+	m_gp_registers->set_background_color(text_background);
 	m_gp_registers->use_background(true);
 	m_stack = m_text_manager->create_text_field(10 + 72 + 10, offset_h, 108, 256, m_font);
-	m_stack->set_background_color({32, 32, 32, 255});
+	m_stack->set_background_color(text_background);
 	m_stack->use_background(true);
 	
 	const int32_t label_offset_w = 10 + 72 + 10 + 108 + 10;
 	const int32_t label_offset_h = 16 + 5;
 	
 	m_program_counter = m_text_manager->create_text_label(label_offset_w, offset_h, 78, m_font);
-	m_program_counter->set_background_color({32, 32, 32, 255});
+	m_program_counter->set_background_color(text_background);
 	m_program_counter->use_background(true);
 	m_index_register = m_text_manager->create_text_label(label_offset_w, offset_h + label_offset_h, 78, m_font);
-	m_index_register->set_background_color({32, 32, 32, 255});
+	m_index_register->set_background_color(text_background);
 	m_index_register->use_background(true);
 	m_stack_pointer = m_text_manager->create_text_label(label_offset_w, offset_h + label_offset_h * 2, 78, m_font);
-	m_stack_pointer->set_background_color({32, 32, 32, 255});
+	m_stack_pointer->set_background_color(text_background);
 	m_stack_pointer->use_background(true);
 	m_delay_timer = m_text_manager->create_text_label(label_offset_w, offset_h + label_offset_h * 3, 78, m_font);
-	m_delay_timer->set_background_color({32, 32, 32, 255});
+	m_delay_timer->set_background_color(text_background);
 	m_delay_timer->use_background(true);
 	m_sound_timer = m_text_manager->create_text_label(label_offset_w, offset_h + label_offset_h * 4, 78, m_font);
-	m_sound_timer->set_background_color({32, 32, 32, 255});
+	m_sound_timer->set_background_color(text_background);
 	m_sound_timer->use_background(true);
 }
 
@@ -161,7 +165,7 @@ void Debugger::tick() {
 }
 
 void Debugger::render() {
-	SDL_SetRenderDrawColor(m_renderer->get(), 0, 0, 0, 255);
+	SDL_SetRenderDrawColor(m_renderer->get(), background.r, background.g, background.b, background.a);
 	SDL_RenderClear(m_renderer->get());
 	m_text_manager->draw(m_renderer->get());
 	SDL_RenderPresent(m_renderer->get());
