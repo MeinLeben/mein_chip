@@ -50,10 +50,19 @@ public:
 		return m_visible;
 	}
 
+	void update_instruction(uint16_t instruction);
+	void update_instruction_description(const std::string& description);
+	void update_gp_registers(uint8_t* v, size_t size);
+	void update_index_register(uint16_t i);
+	void update_delay_timer(uint8_t dt);
+	void update_sound_timer(uint8_t st);
+	void update_program_counter(uint16_t pc);
+	void update_stack_pointer(uint8_t sp);
+	void update_stack(uint16_t* stack, size_t size);
+
 private:
 	Debugger(SDL_Window* pParent = nullptr);
 
-	void update();
 	void render();
 
 	bool m_visible = true;
@@ -64,6 +73,13 @@ private:
 	std::unique_ptr<SDLWrapper::Renderer> m_renderer;
 	std::unique_ptr<TextManager> m_text_manager;
 
-	TextLabel* m_text_label = nullptr;
-	TextField* m_text_field = nullptr;
+	TextLabel* m_instruction = nullptr;
+	TextLabel* m_instruction_description = nullptr;
+	TextField* m_gp_registers = nullptr;
+	TextLabel* m_index_register = nullptr;
+	TextLabel* m_delay_timer = nullptr;
+	TextLabel* m_sound_timer = nullptr;
+	TextLabel* m_program_counter = nullptr;
+	TextLabel* m_stack_pointer = nullptr;
+	TextField* m_stack = nullptr;
 };

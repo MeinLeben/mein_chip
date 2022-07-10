@@ -84,7 +84,7 @@ private:
 		m_pDisplay = new Display(x, 20, display_pixel_scale, display_width, display_height);
 		m_pInput = new Input;
 		m_pMemory = new Memory(4096);
-		m_pCPU = new CPU;
+		m_pCPU = new CPU(m_debugger);
 
 		SDL_RaiseWindow(m_pWindow);
 
@@ -181,7 +181,7 @@ private:
 			float delta = (float)(current_time - previous_time);
 			if (delta > 1000 / 60.0f && (!pause || step)) {
 				Bus bus = { m_pMemory, m_pDisplay, m_pInput };
-				m_pCPU->tick(&bus);
+				m_pCPU->tick(&bus, m_debugger);
 				previous_time = current_time;
 				step = false;
 			}

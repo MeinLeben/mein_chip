@@ -1,11 +1,12 @@
 #include "cpu.h"
 #include "display.h"
+#include "debugger.h"
 #include "input.h"
 #include "memory.h"
 
 #define VERBOSE 1
 
-CPU::CPU() {
+CPU::CPU(std::unique_ptr<Debugger>& debugger) {
 	m_instructions[0x00E0] = &CPU::CLS;  m_instructions[0x00EE] = &CPU::RET;  m_instructions[0x0000] = &CPU::SYS;  m_instructions[0x1000] = &CPU::JP;   m_instructions[0x2000] = &CPU::CALL;
 	m_instructions[0x3000] = &CPU::SE;   m_instructions[0x4000] = &CPU::SNE;  m_instructions[0x5000] = &CPU::SE;   m_instructions[0x6000] = &CPU::LD;   m_instructions[0x7000] = &CPU::ADD;
 	m_instructions[0x8000] = &CPU::LD;   m_instructions[0x8001] = &CPU::OR;   m_instructions[0x8002] = &CPU::AND;  m_instructions[0x8003] = &CPU::XOR;  m_instructions[0x8004] = &CPU::ADD;
@@ -13,9 +14,21 @@ CPU::CPU() {
 	m_instructions[0xA000] = &CPU::LD;   m_instructions[0xB000] = &CPU::JP;   m_instructions[0xC000] = &CPU::RND;  m_instructions[0xD000] = &CPU::DRW;  m_instructions[0xE09E] = &CPU::SKP;
 	m_instructions[0xE0A1] = &CPU::SKNP; m_instructions[0xF007] = &CPU::LD;   m_instructions[0xF00A] = &CPU::LD;   m_instructions[0xF015] = &CPU::LD;   m_instructions[0xF018] = &CPU::LD;
 	m_instructions[0xF01E] = &CPU::ADD;  m_instructions[0xF029] = &CPU::LD;   m_instructions[0xF033] = &CPU::LD;   m_instructions[0xF055] = &CPU::LD;   m_instructions[0xF065] = &CPU::LD;
+
+	if (debugger) {
+		debugger->update_instruction(0);
+		debugger->update_instruction_description("");
+		debugger->update_gp_registers(m_v, 16);
+		debugger->update_index_register(m_i);
+		debugger->update_delay_timer(m_dt);
+		debugger->update_sound_timer(m_st);
+		debugger->update_program_counter(m_pc);
+		debugger->update_stack_pointer(m_sp);
+		debugger->update_stack(m_stack, 16);
+	}
 }
 
-void CPU::tick(Bus* pBus) {
+void CPU::tick(Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	if (!pBus || !pBus->pMemory) {
 		return;
 	}
@@ -25,7 +38,17 @@ void CPU::tick(Bus* pBus) {
 	}
 
 	uint16_t instruction = fetch(pBus->pMemory);
-	execute(instruction, pBus);
+	execute(instruction, pBus, debugger);
+
+	if (debugger) {
+		debugger->update_gp_registers(m_v, 16);
+		debugger->update_index_register(m_i);
+		debugger->update_delay_timer(m_dt);
+		debugger->update_sound_timer(m_st);
+		debugger->update_program_counter(m_pc);
+		debugger->update_stack_pointer(m_sp);
+		debugger->update_stack(m_stack, 16);
+	}
 }
 
 uint16_t CPU::fetch(Memory* pMemory) {
@@ -35,10 +58,11 @@ uint16_t CPU::fetch(Memory* pMemory) {
 	return instruction;
 }
 
-void CPU::execute(uint16_t instruction, Bus* pBus) {
-#if VERBOSE
-	log_instruction(instruction);
-#endif
+void CPU::execute(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
+	if (debugger) {
+		debugger->update_instruction(instruction);
+	}
+
 	uint16_t opcode = instruction;
 	switch (instruction >> 12) {
 	case 0x0:
@@ -64,10 +88,6 @@ void CPU::execute(uint16_t instruction, Bus* pBus) {
 	else {
 		assert(false);
 	}
-}
-
-void CPU::log_instruction(uint16_t instruction) {
-	std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << std::uppercase << instruction << std::endl;
 }
 
 uint8_t CPU::ADD(uint16_t instruction, Bus* pBus) {

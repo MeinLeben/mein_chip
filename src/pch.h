@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iomanip>
 #include <memory>
+#include <sstream>
 #include <unordered_map>
 #include <unordered_set>
 

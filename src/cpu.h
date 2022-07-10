@@ -1,5 +1,6 @@
 #pragma once
 class Memory;
+class Debugger;
 class Display;
 class Input;
 
@@ -12,9 +13,9 @@ struct Bus {
 class CPU
 {
 public:
-	CPU();
+	CPU(std::unique_ptr<Debugger>& debugger);
 
-	void tick(Bus* pBus);
+	void tick(Bus* pBus, std::unique_ptr<Debugger>& debugger);
 
 private:
 	uint8_t m_v[16] = {};
@@ -30,7 +31,7 @@ private:
 	std::unordered_map <uint16_t, uint8_t(CPU::*)(uint16_t, Bus*)> m_instructions;
 
 	uint16_t fetch(Memory* pMemory);
-	void execute(uint16_t instruction, Bus* pBus);
+	void execute(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger);
 
 	void log_instruction(uint16_t instruction);
 
