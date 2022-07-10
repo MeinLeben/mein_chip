@@ -173,6 +173,7 @@ private:
 					m_debugger->handle_event(&event);
 				}
 				m_pInput->handle_event(&event);
+				m_pInput->handle_debugger(m_debugger);
 			}
 
 			if (m_debugger) {
@@ -181,7 +182,7 @@ private:
 
 			uint32_t current_time = SDL_GetTicks();
 			float delta = (float)(current_time - previous_time);
-			if (delta > 1000 / 60.0f && (!pause || step)) {
+			if (delta > (1000 / 60.0f) && (!pause || step)) {
 				Bus bus = { m_pMemory, m_pDisplay, m_pInput };
 				m_pCPU->tick(&bus, m_debugger);
 				previous_time = current_time;

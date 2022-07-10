@@ -60,6 +60,7 @@ public:
 	void update_stack_pointer(uint8_t sp);
 	void update_stack(uint16_t* stack, size_t size);
 	void update_error(const std::string& message);
+	void update_keypad(bool* keys_state, size_t num_keys);
 
 private:
 	Debugger(SDL_Window* pParent = nullptr);
@@ -87,4 +88,5 @@ private:
 	TextLabel* m_stack_pointer = nullptr;
 	TextField* m_stack = nullptr;
 	TextField* m_error = nullptr;
+	TextField* m_keypad[2] = {};
 };

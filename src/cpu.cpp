@@ -6,7 +6,7 @@
 
 std::string instruction_to_string(uint16_t instruction) {
 	std::stringstream ss;
-	ss << "0x" << std::setfill('0')
+	ss << "0x" << std::setfill('0') << std::uppercase
 		<< std::setw(sizeof(uint16_t) * 2)
 		<< std::hex << uint32_t(instruction);
 	return ss.str();
@@ -115,7 +115,7 @@ uint8_t CPU::ADD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		}
 
 		uint16_t t = m_v[(instruction & 0x0F00) >> 8] + m_v[(instruction & 0x00F0) >> 4];
-		m_v[0xF] = t > 255;
+		m_v[0xF] = t > 0xFF;
 		m_v[(instruction & 0x0F00) >> 8] = (uint8_t)t;
 	} break;
 	case 0xF:

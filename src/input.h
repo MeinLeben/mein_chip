@@ -1,10 +1,13 @@
 #pragma once
 
+class Debugger;
+
 class Input {
 public:
 	Input();
 
 	void handle_event(SDL_Event* pEvent);
+	void handle_debugger(std::unique_ptr<Debugger>& debugger);
 
 	void use_virtual_keypad(bool use) {
 		m_use_virtual_keypad = use;

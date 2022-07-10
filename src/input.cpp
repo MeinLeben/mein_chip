@@ -1,5 +1,7 @@
 #include "input.h"
 
+#include "debugger.h"
+
 Input::Input() {
 	m_keys[0x0].keycodes[0] = SDLK_0; m_keys[0x0].keycodes[1] = SDLK_x;
 	m_keys[0x1].keycodes[0] = SDLK_1; m_keys[0x1].keycodes[1] = SDLK_1;
@@ -31,4 +33,16 @@ void Input::handle_event(SDL_Event* pEvent) {
 			}
 		}
 	}
+}
+
+void Input::handle_debugger(std::unique_ptr<Debugger>& debugger) {
+	if (!debugger) {
+		return;
+	}
+
+	bool keys_state[16] = {};
+	for (int32_t i = 0; i < kNumberOfKeys; i++) {
+		keys_state[i] = m_keys[i].isPressed;
+	}
+	debugger->update_keypad(keys_state, 16);
 }
