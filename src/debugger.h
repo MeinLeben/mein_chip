@@ -59,6 +59,7 @@ public:
 	void update_program_counter(uint16_t pc);
 	void update_stack_pointer(uint8_t sp);
 	void update_stack(uint16_t* stack, size_t size);
+	void update_error(const std::string& message);
 
 private:
 	Debugger(SDL_Window* pParent = nullptr);
@@ -67,11 +68,14 @@ private:
 
 	bool m_visible = true;
 
-	Font::Handle m_font = Font::kInvalidHandle;
+	Font::Handle m_default_font = Font::kInvalidHandle;
+	Font::Handle m_error_font = Font::kInvalidHandle;
 
 	std::unique_ptr<SDLWrapper::Window> m_window;
 	std::unique_ptr<SDLWrapper::Renderer> m_renderer;
 	std::unique_ptr<TextManager> m_text_manager;
+
+	std::string m_error_text;
 
 	TextLabel* m_instruction = nullptr;
 	TextLabel* m_instruction_description = nullptr;
@@ -82,4 +86,5 @@ private:
 	TextLabel* m_program_counter = nullptr;
 	TextLabel* m_stack_pointer = nullptr;
 	TextField* m_stack = nullptr;
+	TextField* m_error = nullptr;
 };

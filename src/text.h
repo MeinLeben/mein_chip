@@ -93,6 +93,10 @@ public:
 		return m_font_manager->add(renderer, path, size, color);
 	}
 
+	inline const Font* get_font(Font::Handle handle) const {
+		return m_font_manager->get(handle);
+	}
+
 	TextLabel* create_text_label(int32_t x, int32_t y, int32_t w, Font::Handle font);
 	TextField* create_text_field(int32_t x, int32_t y, int32_t w, int32_t h, Font::Handle font);
 

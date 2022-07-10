@@ -48,7 +48,7 @@ Font::Font(TTF_Font* pFont, const std::string& path, int32_t size, SDL_Color col
 }
 
 std::pair<bool, Font::Handle> FontManager::add(SDL_Renderer* renderer, const std::string& path, int32_t size, SDL_Color color) {
-	Font::Handle handle = find(path, size);
+	Font::Handle handle = find(path, size, color);
 	if (handle != Font::kInvalidHandle) {
 		return {false, handle}; 
 	}

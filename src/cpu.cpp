@@ -4,7 +4,13 @@
 #include "input.h"
 #include "memory.h"
 
-#define VERBOSE 1
+std::string instruction_to_string(uint16_t instruction) {
+	std::stringstream ss;
+	ss << "0x" << std::setfill('0')
+		<< std::setw(sizeof(uint16_t) * 2)
+		<< std::hex << uint32_t(instruction);
+	return ss.str();
+}
 
 CPU::CPU(std::unique_ptr<Debugger>& debugger) {
 	m_instructions[0x00E0] = &CPU::CLS;  m_instructions[0x00EE] = &CPU::RET;  m_instructions[0x0000] = &CPU::SYS;  m_instructions[0x1000] = &CPU::JP;   m_instructions[0x2000] = &CPU::CALL;
@@ -86,7 +92,9 @@ void CPU::execute(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& de
 		int8_t result = std::invoke(iter->second, this, instruction, pBus, debugger);
 	}
 	else {
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 }
 
@@ -100,6 +108,16 @@ uint8_t CPU::ADD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 		m_v[(instruction & 0x0F00) >> 8] += (uint8_t)(instruction & 0x00FF);
 	} break;
+	case 0x8:
+	{
+		if(debugger) {
+			debugger->update_instruction_description("8xy4 - ADD Vx, Vy");
+		}
+
+		uint16_t t = m_v[(instruction & 0x0F00) >> 8] + m_v[(instruction & 0x00F0) >> 4];
+		m_v[0xF] = t > 255;
+		m_v[(instruction & 0x0F00) >> 8] = (uint8_t)t;
+	} break;
 	case 0xF:
 	{
 		if(debugger) {
@@ -109,7 +127,9 @@ uint8_t CPU::ADD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		m_i += m_v[(instruction & 0x0F00) >> 8];
 	} break;
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 
 	return 0;
@@ -117,8 +137,18 @@ uint8_t CPU::ADD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::AND(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
+	case 0x8:
+	{
+	if (debugger) {
+			debugger->update_instruction_description("8xy2 - AND Vx, Vy");
+		}
+
+		m_v[(instruction & 0x0F00) >> 8] &= m_v[(instruction & 0x00F0) >> 4];
+	} break;
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 
 	return 0;
@@ -141,7 +171,12 @@ uint8_t CPU::CLS(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 	}
 
 	if (!pBus->pDisplay) {
-		std::cerr << "No display on found." << std::endl;
+		if (debugger) {
+			debugger->update_error("No display found.");
+		}
+		else {
+			std::cerr << "No display found." << std::endl;
+		}
 		return 0;
 	}
 
@@ -156,7 +191,12 @@ uint8_t CPU::DRW(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 	}
 
 	if (!pBus->pDisplay) {
-		std::cerr << "No display found." << std::endl;
+		if (debugger) {
+			debugger->update_error("No display found.");
+		}
+		else {
+			std::cerr << "No display found." << std::endl;
+		}
 		return 0;
 	}
 
@@ -273,7 +313,9 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 			}
 		} break;
 		default:
-			assert(false);
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
@@ -283,7 +325,9 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 uint8_t CPU::OR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 
 	return 0;
@@ -299,7 +343,9 @@ uint8_t CPU::RET(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		m_pc = m_stack[--m_sp];
 	} break;
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 
 	return 0;
@@ -308,7 +354,9 @@ uint8_t CPU::RET(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 uint8_t CPU::RND(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 
 	return 0;
@@ -327,7 +375,9 @@ uint8_t CPU::SE(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 		}
 	} break;
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 	return 0;
 }
@@ -345,7 +395,9 @@ uint8_t CPU::SHL(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		m_v[(instruction & 0x0F00) >> 8] = x << 1;
 	} break;
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 
 	return 0;
@@ -364,7 +416,9 @@ uint8_t CPU::SHR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		m_v[(instruction & 0x0F00) >> 8] = x >> 1;
 	} break;
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 
 	return 0;
@@ -383,7 +437,9 @@ uint8_t CPU::SNE(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		}
 	} break;
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 
 	return 0;
@@ -391,7 +447,12 @@ uint8_t CPU::SNE(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::SKP(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	if (!pBus->pInput) {
-		std::cerr << "No input found." << std::endl;
+		if (debugger) {
+			debugger->update_error("No input found.");
+		}
+		else {
+			std::cerr << "No input found." << std::endl;
+		}
 		return 0;
 	}
 
@@ -408,7 +469,12 @@ uint8_t CPU::SKP(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::SKNP(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	if (!pBus->pInput) {
-		std::cerr << "No input found." << std::endl;
+		if (debugger) {
+			debugger->update_error("No input found.");
+		}
+		else {
+			std::cerr << "No input found." << std::endl;
+		}
 		return 0;
 	}
 
@@ -427,7 +493,9 @@ uint8_t CPU::SKNP(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& de
 uint8_t CPU::SUB(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 
 	return 0;
@@ -436,7 +504,9 @@ uint8_t CPU::SUB(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 uint8_t CPU::SUBN(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 
 	return 0;
@@ -445,7 +515,9 @@ uint8_t CPU::SUBN(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& de
 uint8_t CPU::SYS(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 
 	return 0;
@@ -454,7 +526,9 @@ uint8_t CPU::SYS(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 uint8_t CPU::XOR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
 	default:
-		assert(false);
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
 	}
 
 	return 0;

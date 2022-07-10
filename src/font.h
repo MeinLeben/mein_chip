@@ -59,10 +59,14 @@ public:
 
 	std::pair<bool, Font::Handle> add(SDL_Renderer* renderer, const std::string& path, int32_t size = 12, SDL_Color color = {255, 255, 255, 255});
 
-	inline Font::Handle find(const std::string& path, int32_t size) const {
+	inline Font::Handle find(const std::string& path, int32_t size, SDL_Color color) const {
 		for (auto iter : m_fonts) {
 			if ((iter.second)->m_path == path &&
-				(iter.second)->m_size == size) {
+				(iter.second)->m_size == size &&
+				(iter.second)->m_color.r == color.r &&
+				(iter.second)->m_color.g == color.g &&
+				(iter.second)->m_color.b == color.b &&
+				(iter.second)->m_color.a == color.a) {
 				return iter.first;
 			}
 		}
