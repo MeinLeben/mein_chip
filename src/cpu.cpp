@@ -22,8 +22,7 @@ CPU::CPU(std::unique_ptr<Debugger>& debugger) {
 	m_instructions[0xF01E] = &CPU::ADD;  m_instructions[0xF029] = &CPU::LD;   m_instructions[0xF033] = &CPU::LD;   m_instructions[0xF055] = &CPU::LD;   m_instructions[0xF065] = &CPU::LD;
 
 	if (debugger) {
-		debugger->update_instruction(0);
-		debugger->update_instruction_description("");
+		debugger->update_instruction(0, "Unknown");
 		debugger->update_gp_registers(m_v, 16);
 		debugger->update_index_register(m_i);
 		debugger->update_delay_timer(m_dt);
@@ -65,10 +64,6 @@ uint16_t CPU::fetch(Memory* pMemory) {
 }
 
 void CPU::execute(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
-	if (debugger) {
-		debugger->update_instruction(instruction);
-	}
-
 	uint16_t opcode = instruction;
 	switch (instruction >> 12) {
 	case 0x0:
@@ -103,7 +98,7 @@ uint8_t CPU::ADD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 	case 0x7:
 	{
 		if(debugger) {
-			debugger->update_instruction_description("7xkk - ADD Vx, byte");
+			debugger->update_instruction(instruction, "7xkk - ADD Vx, byte");
 		}
 
 		m_v[(instruction & 0x0F00) >> 8] += (uint8_t)(instruction & 0x00FF);
@@ -111,7 +106,7 @@ uint8_t CPU::ADD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 	case 0x8:
 	{
 		if(debugger) {
-			debugger->update_instruction_description("8xy4 - ADD Vx, Vy");
+			debugger->update_instruction(instruction, "8xy4 - ADD Vx, Vy");
 		}
 
 		uint16_t t = m_v[(instruction & 0x0F00) >> 8] + m_v[(instruction & 0x00F0) >> 4];
@@ -121,7 +116,7 @@ uint8_t CPU::ADD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 	case 0xF:
 	{
 		if(debugger) {
-			debugger->update_instruction_description("Fx1E - ADD I, Vx");
+			debugger->update_instruction(instruction, "Fx1E - ADD I, Vx");
 		}
 	
 		m_i += m_v[(instruction & 0x0F00) >> 8];
@@ -140,7 +135,7 @@ uint8_t CPU::AND(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 	case 0x8:
 	{
 	if (debugger) {
-			debugger->update_instruction_description("8xy2 - AND Vx, Vy");
+			debugger->update_instruction(instruction, "8xy2 - AND Vx, Vy");
 		}
 
 		m_v[(instruction & 0x0F00) >> 8] &= m_v[(instruction & 0x00F0) >> 4];
@@ -156,7 +151,7 @@ uint8_t CPU::AND(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::CALL(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	if(debugger) {
-		debugger->update_instruction_description("CALL addr");
+		debugger->update_instruction(instruction, "CALL addr");
 	}
 
 	m_stack[m_sp++] = m_pc;
@@ -167,7 +162,7 @@ uint8_t CPU::CALL(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& de
 
 uint8_t CPU::CLS(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	if(debugger) {
-		debugger->update_instruction_description("00E0 - CLS");
+		debugger->update_instruction(instruction, "00E0 - CLS");
 	}
 
 	if (!pBus->pDisplay) {
@@ -187,7 +182,7 @@ uint8_t CPU::CLS(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::DRW(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	if(debugger) {
-		debugger->update_instruction_description("Dxyn - DRW Vx, Vy, nibble");
+		debugger->update_instruction(instruction, "Dxyn - DRW Vx, Vy, nibble");
 	}
 
 	if (!pBus->pDisplay) {
@@ -219,7 +214,7 @@ uint8_t CPU::DRW(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::JP(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	if(debugger) {
-		debugger->update_instruction_description("1nnn - JP addr");
+		debugger->update_instruction(instruction, "1nnn - JP addr");
 	}
 
 	m_pc = instruction & 0x0FFF;
@@ -232,14 +227,14 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 	case 0xA:
 	{
 		if(debugger) {
-			debugger->update_instruction_description("Annn - LD I, addr");
+			debugger->update_instruction(instruction, "Annn - LD I, addr");
 		}
 		m_i = instruction & 0x0FFF;
 	} break;
 	case 0x6:
 	{
 		if(debugger) {
-			debugger->update_instruction_description("6xkk - LD Vx, byte");
+			debugger->update_instruction(instruction, "6xkk - LD Vx, byte");
 		}
 		m_v[(instruction & 0x0F00) >> 8] = (uint8_t)(instruction & 0x00FF);
 	} break;
@@ -248,7 +243,7 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 		case 0x07:
 		{
 			if(debugger) {
-				debugger->update_instruction_description("Fx07 - LD Vx, DT");
+				debugger->update_instruction(instruction, "Fx07 - LD Vx, DT");
 			}
 
 			m_v[(instruction & 0x0F00) >> 8] = m_dt;
@@ -256,7 +251,7 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 		case 0x0A:
 		{
 			if(debugger) {
-				debugger->update_instruction_description("Fx0A - LD Vx, K");
+				debugger->update_instruction(instruction, "Fx0A - LD Vx, K");
 			}
 
 			int8_t key = 0;
@@ -269,7 +264,7 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 		case 0x15:
 		{
 			if(debugger) {
-				debugger->update_instruction_description("Fx15 - LD DT, Vx");
+				debugger->update_instruction(instruction, "Fx15 - LD DT, Vx");
 			}
 
 			m_dt = m_v[(instruction & 0x0F00) >> 8];
@@ -277,7 +272,7 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 		case 0x18:
 		{
 			if(debugger) {
-				debugger->update_instruction_description("Fx18 - LD ST, Vx");
+				debugger->update_instruction(instruction, "Fx18 - LD ST, Vx");
 			}
 
 			m_st = m_v[(instruction & 0x0F00) >> 8];
@@ -285,7 +280,7 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 		case 0x29:
 		{
 			if(debugger) {
-				debugger->update_instruction_description("Fx29 - LD F, Vx");
+				debugger->update_instruction(instruction, "Fx29 - LD F, Vx");
 			}
 
 			m_i = pBus->pMemory->read_font_address(m_v[(instruction & 0x0F00) >> 8]);
@@ -293,7 +288,7 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 		case 0x55:
 		{
 			if(debugger) {
-				debugger->update_instruction_description("Fx55 - LD [I], Vx");
+				debugger->update_instruction(instruction, "Fx55 - LD [I], Vx");
 			}
 
 			uint8_t n = (instruction & 0x0F00) >> 8;
@@ -304,7 +299,7 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 		case 0x65:
 		{
 			if(debugger) {
-				debugger->update_instruction_description("Fx65 - LD Vx, [I]");
+				debugger->update_instruction(instruction, "Fx65 - LD Vx, [I]");
 			}
 
 			uint8_t n = (instruction & 0x0F00) >> 8;
@@ -338,7 +333,7 @@ uint8_t CPU::RET(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 	case 0x0:
 	{
 		if(debugger) {
-			debugger->update_instruction_description("00EE - RET");
+			debugger->update_instruction(instruction, "00EE - RET");
 		}
 		m_pc = m_stack[--m_sp];
 	} break;
@@ -367,7 +362,7 @@ uint8_t CPU::SE(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 	case 0x3:
 	{
 		if(debugger) {
-			debugger->update_instruction_description("3xkk - SE Vx, byte");
+			debugger->update_instruction(instruction, "3xkk - SE Vx, byte");
 		}
 
 		if (m_v[(instruction & 0x0F00) >> 8] == (uint8_t)(instruction & 0x00FF)) {
@@ -387,7 +382,7 @@ uint8_t CPU::SHL(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 	case 0x8:
 	{
 		if(debugger) {
-			debugger->update_instruction_description("8xyE - SHL Vx {, Vy}.");
+			debugger->update_instruction(instruction, "8xyE - SHL Vx {, Vy}.");
 		}
 
 		uint8_t x = m_v[(instruction & 0x0F00) >> 8];
@@ -408,7 +403,7 @@ uint8_t CPU::SHR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 	case 0x8:
 	{
 		if(debugger) {
-			debugger->update_instruction_description("8xy6 - SHR Vx {, Vy}");
+			debugger->update_instruction(instruction, "8xy6 - SHR Vx {, Vy}");
 		}
 
 		uint8_t x = m_v[(instruction & 0x0F00) >> 8];
@@ -429,7 +424,7 @@ uint8_t CPU::SNE(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 	case 0x4:
 	{
 		if(debugger) {
-			debugger->update_instruction_description("4xkk - SNE Vx, byte");
+			debugger->update_instruction(instruction, "4xkk - SNE Vx, byte");
 		}
 	
 		if (m_v[(instruction & 0x0F00) >> 8] != (uint8_t)(instruction & 0x00FF)) {
@@ -457,11 +452,14 @@ uint8_t CPU::SKP(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 	}
 
 	if(debugger) {
-		debugger->update_instruction_description("Ex9E - SKP Vx");
+		debugger->update_instruction(instruction, "Ex9E - SKP Vx");
 	}
 
 	if (pBus->pInput->is_key_pressed(m_v[(instruction & 0x0F00) >> 8])) {
+		debugger->update_error("Key press registered: " + std::to_string(m_v[(instruction & 0x0F00) >> 8]));
 		m_pc += 2;
+	} else {
+		debugger->update_error("Key press not registered: " + std::to_string(m_v[(instruction & 0x0F00) >> 8]));
 	}
 
 	return 0;
@@ -479,7 +477,7 @@ uint8_t CPU::SKNP(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& de
 	}
 
 	if(debugger) {
-		debugger->update_instruction_description("ExA1 - SKNP Vx");
+		debugger->update_instruction(instruction, "ExA1 - SKNP Vx");
 	}
 
 	uint8_t key = m_v[(instruction & 0x0F00) >> 8];

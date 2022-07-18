@@ -39,16 +39,11 @@ Debugger::Debugger(SDL_Window* pParent) {
 
 	const uint32_t border = 10;
 	int32_t offset_y = border;
-	m_instruction = m_text_manager->create_text_label(offset_y, border, 1, m_default_font);
-	m_instruction->set_background_color(text_background);
-	m_instruction->use_background(true);
+	m_instructions = m_text_manager->create_text_field(border, offset_y, 1, default_font_height * 2, m_default_font);
+	m_instructions->set_background_color(text_background);
+	m_instructions->use_background(true);
 
-	offset_y += default_font_height + border;
-	m_instruction_description = m_text_manager->create_text_label(border, offset_y, 1, m_default_font);
-	m_instruction_description->set_background_color(text_background);
-	m_instruction_description->use_background(true);
-
-	offset_y += default_font_height + border;
+	offset_y += (default_font_height * 2) + border;
 	int32_t label_offset_y = offset_y;
 	int32_t offset_x = border;
 	const int32_t gp_registers_h = (1 + 16) * default_font_height;
@@ -109,8 +104,7 @@ Debugger::Debugger(SDL_Window* pParent) {
 	m_keypad[1]->use_background(true);
 
 	const int32_t max_text_length_w = offset_x + label_w - border;
-	m_instruction->set_width(max_text_length_w);
-	m_instruction_description->set_width(max_text_length_w);
+	m_instructions->set_width(max_text_length_w);
 	m_error->set_width(max_text_length_w);
 
 	const int32_t window_w = offset_x + label_w + border;
@@ -129,26 +123,28 @@ void Debugger::handle_event(SDL_Event* pEvent) {
 	}
 }
 	
-void Debugger::update_instruction(uint16_t instruction) {
+void Debugger::update_instruction(uint16_t instruction, const std::string& description) {
 	std::stringstream ss;
 	ss << "0x" << std::hex << std::setw(sizeof(uint16_t) * 2) 
 		<< std::setfill('0') << std::uppercase 
 		<< instruction << std::endl;
 
-	m_instruction->set_text("INSTRUCTION " + ss.str());
-}
+	std::string str = "INSTRUCTION " + ss.str();
+	str.erase(std::find(str.begin(), str.end(), '\n'), str.end());
+	str += " : " + description;
 
-void Debugger::update_instruction_description(const std::string& description) {
-	m_instruction_description->set_text("DESCRIPTION " + description);
+	m_instruction_list[1] = m_instruction_list[0];
+	m_instruction_list[0] = str;
+
+	m_instructions->set_text(m_instruction_list[0] + "\n" + m_instruction_list[1]);
 }
 
 void Debugger::update_gp_registers(uint8_t* v, size_t size) {
 	std::string str = "GP REGISTERS\n";
 	for (size_t i = 0; i < size; i++) {
 		std::stringstream ss;
-		ss << "v[" << std::setfill('0') 
-			<< std::setw(sizeof(char) * 2) 
-			<< i << "] = " 
+		ss << "v[" << std::uppercase 
+			<< std::hex << i << "] = " 
 			<< "0x" << std::setfill('0') << std::uppercase 
 			<< std::setw(sizeof(char) * 2) 
 			<< std::hex << uint32_t(v[i]) << std::endl;

@@ -50,8 +50,7 @@ public:
 		return m_visible;
 	}
 
-	void update_instruction(uint16_t instruction);
-	void update_instruction_description(const std::string& description);
+	void update_instruction(uint16_t instruction, const std::string& description);
 	void update_gp_registers(uint8_t* v, size_t size);
 	void update_index_register(uint16_t i);
 	void update_delay_timer(uint8_t dt);
@@ -77,9 +76,8 @@ private:
 	std::unique_ptr<TextManager> m_text_manager;
 
 	std::string m_error_text;
-
-	TextLabel* m_instruction = nullptr;
-	TextLabel* m_instruction_description = nullptr;
+	std::string m_instruction_list[2] = {};
+	TextField* m_instructions = nullptr;
 	TextField* m_gp_registers = nullptr;
 	TextLabel* m_index_register = nullptr;
 	TextLabel* m_delay_timer = nullptr;
