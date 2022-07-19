@@ -28,6 +28,8 @@ void TextBase::draw(SDL_Renderer* renderer, const std::unique_ptr<FontManager>& 
 		if (c == '\n') {
 			y += dst.h;
 			x = m_size.x;
+			c = *text++;
+			continue;
 		}
 
 		if (c == '\t') {
@@ -39,6 +41,10 @@ void TextBase::draw(SDL_Renderer* renderer, const std::unique_ptr<FontManager>& 
 		}
 
 		if (x < m_size.x + m_size.w) {
+			if (pGlyphs[c].x == 0 && pGlyphs[c].y == 0 && pGlyphs[c].w == 0 && pGlyphs[c].h == 0) {
+				c = ' ';
+			}
+
 			dst.x = x;
 			dst.y = y;
 			dst.w = pGlyphs[c].w;
