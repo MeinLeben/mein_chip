@@ -16,21 +16,6 @@ Display::~Display() {
 	delete[] m_pGrid;
 }
 
-void Display::update_mouse_position(int32_t x, int32_t y) {
-	if (x == m_mouse_x && y == m_mouse_y) {
-		return;
-	}
-	m_mouse_x = x; m_mouse_y = y;
-	SDL_Rect rect = { m_x, m_y, (int32_t)(m_width * m_scale), (int32_t)(m_height * m_scale) };
-	if (m_mouse_x >= rect.x && m_mouse_y >= rect.y &&
-		m_mouse_x < rect.x + rect.w && m_mouse_y < rect.y + rect.h) {
-		int32_t grid_mouse_x = (m_mouse_x - rect.x) / m_scale;
-		int32_t grid_mouse_y = (m_mouse_y - rect.y) / m_scale;
-		std::cout << "grid mouse position: "  << std::hex << std::setfill('0') << std::uppercase << std::setw(2) <<  grid_mouse_x << 
-			", " << std::hex << std::setfill('0') << std::uppercase << std::setw(2) << grid_mouse_y << std::endl;
-	}
-}
-
 void Display::clear() {
 	memset(m_pGrid, 0x0, m_width * m_height * sizeof(uint32_t));
 }

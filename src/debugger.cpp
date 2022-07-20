@@ -65,6 +65,11 @@ Debugger::Debugger(SDL_Window* pParent) {
 	m_error->set_background_color(text_background);
 	m_error->use_background(true);
 
+	offset_y += error_h + border;
+	m_mouse_position = m_text_manager->create_text_label(border, offset_y, 1, m_default_font);
+	m_mouse_position->set_background_color(text_background);
+	m_mouse_position->use_background(true);
+
 	offset_x += stack_w + border;
 	const int32_t label_w = 104;
 	m_program_counter = m_text_manager->create_text_label(offset_x, label_offset_y, label_w, m_default_font);
@@ -106,9 +111,10 @@ Debugger::Debugger(SDL_Window* pParent) {
 	const int32_t max_text_length_w = offset_x + label_w - border;
 	m_instructions->set_width(max_text_length_w);
 	m_error->set_width(max_text_length_w);
+	m_mouse_position->set_width(max_text_length_w);
 
 	const int32_t window_w = offset_x + label_w + border;
-	const int32_t window_h = offset_y + error_h + border;
+	const int32_t window_h = offset_y + default_font_height + border;
 	
 	SDL_SetWindowSize(m_window->get(), window_w, window_h);
 }
@@ -244,6 +250,19 @@ void Debugger::update_keypad(bool* keys_state, size_t num_keys) {
 
 	m_keypad[0]->set_text(key_pad[0]);
 	m_keypad[1]->set_text(key_pad[1]);
+}
+
+void Debugger::update_mouse_position(int32_t x, int32_t y, uint32_t display_x, uint32_t display_y, uint32_t display_w, uint32_t display_h, uint32_t display_pixel_scale) {
+	if (x >= display_x && y >= display_y &&
+		x < display_x + (display_w * display_pixel_scale) && y < display_y + (display_h * display_pixel_scale)) {
+		int32_t grid_mouse_x = (x - display_x) / display_pixel_scale;
+		int32_t grid_mouse_y = (y - display_y) / display_pixel_scale;
+		std::stringstream ss;
+		ss << "Mouse position: "  << std::hex << std::setfill('0') << std::uppercase << std::setw(2) <<  grid_mouse_x << 
+			", " << std::hex << std::setfill('0') << std::uppercase << std::setw(2) << grid_mouse_y << std::endl;
+		
+		m_mouse_position->set_text(ss.str());
+	}
 }
 
 void Debugger::tick() {

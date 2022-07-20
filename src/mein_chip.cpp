@@ -5,13 +5,22 @@
 #include "loader.h"
 #include "memory.h"
 
-const SDL_Color background = {31, 31, 31, 255};
+static const char* APP_TITLE = "Mein Chip8 Interpreter";
+static const uint32_t APP_WIDTH = 720;
+static const uint32_t APP_HEIGHT = 405;
+static const SDL_Color BACKGROUND = {31, 31, 31, 255};
+
+static const uint32_t DISPLAY_WIDTH = 64;
+static const uint32_t DISPLAY_HEIGHT = 32;
+static const uint32_t DISPLAY_PIXEL_SCALE = 10;
+static const uint32_t DISPLAY_X = APP_WIDTH / 2 - DISPLAY_WIDTH * DISPLAY_PIXEL_SCALE / 2;
+static const uint32_t DISPLAY_Y = 20;
 
 class MeinChip {
 public:
-	static int32_t run(const char* pTitle, int32_t width, int32_t height, int32_t argc, char* argv[]) {
+	static int32_t run(int32_t argc, char* argv[]) {
 		MeinChip app;
-		if (!app.initialize(pTitle, width, height)) {
+		if (!app.initialize()) {
 			return -1;
 		}
 
@@ -42,7 +51,7 @@ private:
 
 	}
 
-	bool initialize(const char* pTitle, int32_t width, int32_t height) {
+	bool initialize() {
 
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0) {
 			std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
@@ -55,11 +64,11 @@ private:
 		}
 
 		m_pWindow = SDL_CreateWindow(
-			pTitle,
+			APP_TITLE,
 			SDL_WINDOWPOS_UNDEFINED,
 			SDL_WINDOWPOS_UNDEFINED,
-			width,
-			height,
+			APP_WIDTH,
+			APP_HEIGHT,
 			0);
 
 		if (!m_pWindow) {
@@ -77,13 +86,8 @@ private:
 #if USE_DEBUGGER
 		m_debugger = Debugger::create(m_pWindow);
 #endif
-		const uint32_t display_width = 64;
-		const uint32_t display_height = 32;
-		const uint32_t display_pixel_scale = 10;
 
-		const uint32_t x = width / 2 - display_width * display_pixel_scale / 2;
-
-		m_pDisplay = new Display(x, 20, display_pixel_scale, display_width, display_height);
+		m_pDisplay = new Display(DISPLAY_X, DISPLAY_Y, DISPLAY_PIXEL_SCALE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 		m_pInput = new Input;
 		m_pMemory = new Memory(4096);
 		m_pCPU = new CPU(m_debugger);
@@ -180,16 +184,17 @@ private:
 			}
 
 			if (m_debugger) {
+				m_debugger->update_mouse_position(mouse_x, mouse_y, DISPLAY_X, DISPLAY_Y, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_PIXEL_SCALE);
 				m_debugger->tick();
 			}
-
-			m_pDisplay->update_mouse_position(mouse_x, mouse_y);
 
 			uint32_t current_time = SDL_GetTicks();
 			float delta = (float)(current_time - previous_time);
 			if (delta > (1000 / 60.0f) && (!pause || step)) {
 				Bus bus = { m_pMemory, m_pDisplay, m_pInput };
-				m_pCPU->tick(&bus, m_debugger);
+				for (int32_t tmp_i = 0; tmp_i < 20; tmp_i++) {
+					m_pCPU->tick(&bus, m_debugger);
+				}
 				previous_time = current_time;
 				step = false;
 			}
@@ -201,7 +206,7 @@ private:
 	}
 
 	void render() {
-		SDL_SetRenderDrawColor(m_pRenderer, background.r, background.g, background.b, background.a);
+		SDL_SetRenderDrawColor(m_pRenderer, BACKGROUND.r, BACKGROUND.g, BACKGROUND.b, BACKGROUND.a);
 		SDL_RenderClear(m_pRenderer);
 
 		m_pDisplay->draw(m_pRenderer);
@@ -231,5 +236,5 @@ private:
 };
 
 int32_t main(int32_t argc, char* argv[]) {
-	return MeinChip::run("Mein Chip8 Interpreter", 720, 405, argc, argv);
+	return MeinChip::run(argc, argv);
 }

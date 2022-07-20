@@ -6,8 +6,6 @@ public:
 	Display(int32_t x, int32_t y, uint32_t pixel_scale, uint32_t pixel_width = 64, uint32_t pixel_height = 32);
 	~Display();
 
-	void update_mouse_position(int32_t x, int32_t y);
-
 	void clear();
 	
 	bool plot_pixel(uint32_t x, uint32_t y);
@@ -20,7 +18,5 @@ private:
 	int32_t m_x = 0, m_y = 0;
 	uint32_t m_width = 0, m_height = 0;
 	uint32_t m_scale = 0;
-
-	int32_t m_mouse_x = 0, m_mouse_y = 0;
 };
 
