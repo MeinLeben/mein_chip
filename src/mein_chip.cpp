@@ -114,11 +114,14 @@ private:
 			return -1;
 		}
 
-		SDL_Event event;
 
 		bool pause = true, step = false;
 		uint32_t previous_time = 0;
 		while (true) {
+			int32_t mouse_x, mouse_y;
+			int32_t mouse_bitmask = SDL_GetMouseState(&mouse_x, &mouse_y);
+
+			SDL_Event event;
 			while (SDL_PollEvent(&event)) {
 				if (event.window.windowID == SDL_GetWindowID(m_pWindow)) {
 					if (event.type == SDL_QUIT) {
@@ -179,6 +182,8 @@ private:
 			if (m_debugger) {
 				m_debugger->tick();
 			}
+
+			m_pDisplay->update_mouse_position(mouse_x, mouse_y);
 
 			uint32_t current_time = SDL_GetTicks();
 			float delta = (float)(current_time - previous_time);

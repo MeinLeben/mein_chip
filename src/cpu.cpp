@@ -238,7 +238,15 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 		}
 		m_v[(instruction & 0x0F00) >> 8] = (uint8_t)(instruction & 0x00FF);
 	} break;
+	case 0x8:
+	{
+		if (debugger) {
+			debugger->update_instruction(instruction, "8xy0 - LD Vx, Vy");
+		}
+		m_v[(instruction & 0x0F00) >> 8] = m_v[(instruction & 0x00F0) >> 4];
+	} break;
 	case 0xF:
+	{
 		switch (instruction & 0x00FF) {
 		case 0x07:
 		{
@@ -308,10 +316,19 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 			}
 		} break;
 		default:
+		{
 			if (debugger) {
 				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
 			}
 		}
+		}
+	} break;
+	default:
+	{
+		if (debugger) {
+			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		}
+	}
 	}
 
 	return 0;
