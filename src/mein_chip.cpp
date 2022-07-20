@@ -16,6 +16,8 @@ static const uint32_t DISPLAY_PIXEL_SCALE = 10;
 static const uint32_t DISPLAY_X = APP_WIDTH / 2 - DISPLAY_WIDTH * DISPLAY_PIXEL_SCALE / 2;
 static const uint32_t DISPLAY_Y = 20;
 
+static const uint32_t INSTRUCTIONS_PER_TICK = 10;
+
 class MeinChip {
 public:
 	static int32_t run(int32_t argc, char* argv[]) {
@@ -192,8 +194,12 @@ private:
 			float delta = (float)(current_time - previous_time);
 			if (delta > (1000 / 60.0f) && (!pause || step)) {
 				Bus bus = { m_pMemory, m_pDisplay, m_pInput };
-				for (int32_t tmp_i = 0; tmp_i < 20; tmp_i++) {
+
+				for (int32_t i = 0; i < INSTRUCTIONS_PER_TICK; i++) {
 					m_pCPU->tick(&bus, m_debugger);
+					if (pause) {
+						break;
+					}
 				}
 				previous_time = current_time;
 				step = false;
