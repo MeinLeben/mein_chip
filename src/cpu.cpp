@@ -66,26 +66,28 @@ uint16_t CPU::fetch(Memory* pMemory) {
 void CPU::execute(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	uint16_t opcode = instruction;
 	switch (instruction >> 12) {
-	case 0x0:
-		if (opcode != 0x00E0 && opcode != 0x00EE) {
+		case 0x0: {
+			if (opcode != 0x00E0 && opcode != 0x00EE) {
+				opcode &= 0xF000;
+			}
+		} break;
+		case 0x8: {
+			opcode &= 0xF00F;
+		} break;
+		case 0xE:
+		case 0xF: {
+			opcode &= 0xF0FF;
+		} break;
+		default: {
 			opcode &= 0xF000;
 		}
-		break;
-	case 0x8:
-		opcode &= 0xF00F;
-		break;
-	case 0xE:
-	case 0xF:
-		opcode &= 0xF0FF;
-		break;
-	default:
-		opcode &= 0xF000;
 	}
 
 	auto iter = m_instructions.find(opcode);
 	if (iter != m_instructions.end()) {
 		int8_t result = std::invoke(iter->second, this, instruction, pBus, debugger);
 	}
+
 	else {
 		if (debugger) {
 			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
@@ -95,35 +97,33 @@ void CPU::execute(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& de
 
 uint8_t CPU::ADD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	case 0x7:
-	{
-		if (debugger) {
-			debugger->update_instruction(instruction, "7xkk - ADD Vx, byte");
-		}
-
-		m_v[(instruction & 0x0F00) >> 8] += (uint8_t)(instruction & 0x00FF);
-	} break;
-	case 0x8:
-	{
-		if (debugger) {
-			debugger->update_instruction(instruction, "8xy4 - ADD Vx, Vy");
-		}
-
-		uint16_t t = m_v[(instruction & 0x0F00) >> 8] + m_v[(instruction & 0x00F0) >> 4];
-		m_v[0xF] = t > 0xFF;
-		m_v[(instruction & 0x0F00) >> 8] = (uint8_t)t;
-	} break;
-	case 0xF:
-	{
-		if (debugger) {
-			debugger->update_instruction(instruction, "Fx1E - ADD I, Vx");
-		}
+		case 0x7: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "7xkk - ADD Vx, byte");
+			}
 	
-		m_i += m_v[(instruction & 0x0F00) >> 8];
-	} break;
-	default:
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			m_v[(instruction & 0x0F00) >> 8] += (uint8_t)(instruction & 0x00FF);
+		} break;
+		case 0x8: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "8xy4 - ADD Vx, Vy");
+			}
+	
+			uint16_t t = m_v[(instruction & 0x0F00) >> 8] + m_v[(instruction & 0x00F0) >> 4];
+			m_v[0xF] = t > 0xFF;
+			m_v[(instruction & 0x0F00) >> 8] = (uint8_t)t;
+		} break;
+		case 0xF: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "Fx1E - ADD I, Vx");
+			}
+		
+			m_i += m_v[(instruction & 0x0F00) >> 8];
+		} break;
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
@@ -132,17 +132,18 @@ uint8_t CPU::ADD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::AND(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	case 0x8:
-	{
-	if (debugger) {
-			debugger->update_instruction(instruction, "8xy2 - AND Vx, Vy");
-		}
-
-		m_v[(instruction & 0x0F00) >> 8] &= m_v[(instruction & 0x00F0) >> 4];
-	} break;
-	default:
+		case 0x8:
+		{
 		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_instruction(instruction, "8xy2 - AND Vx, Vy");
+			}
+	
+			m_v[(instruction & 0x0F00) >> 8] &= m_v[(instruction & 0x00F0) >> 4];
+		} break;
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
@@ -224,111 +225,98 @@ uint8_t CPU::JP(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 
 uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	case 0xA:
-	{
-		if (debugger) {
-			debugger->update_instruction(instruction, "Annn - LD I, addr");
-		}
-		m_i = instruction & 0x0FFF;
-	} break;
-	case 0x6:
-	{
-		if (debugger) {
-			debugger->update_instruction(instruction, "6xkk - LD Vx, byte");
-		}
-		m_v[(instruction & 0x0F00) >> 8] = (uint8_t)(instruction & 0x00FF);
-	} break;
-	case 0x8:
-	{
-		if (debugger) {
-			debugger->update_instruction(instruction, "8xy0 - LD Vx, Vy");
-		}
-		m_v[(instruction & 0x0F00) >> 8] = m_v[(instruction & 0x00F0) >> 4];
-	} break;
-	case 0xF:
-	{
-		switch (instruction & 0x00FF) {
-		case 0x07:
-		{
+		case 0xA: {
 			if (debugger) {
-				debugger->update_instruction(instruction, "Fx07 - LD Vx, DT");
+				debugger->update_instruction(instruction, "Annn - LD I, addr");
 			}
-
-			m_v[(instruction & 0x0F00) >> 8] = m_dt;
+			m_i = instruction & 0x0FFF;
 		} break;
-		case 0x0A:
-		{
+		case 0x6: {
 			if (debugger) {
-				debugger->update_instruction(instruction, "Fx0A - LD Vx, K");
+				debugger->update_instruction(instruction, "6xkk - LD Vx, byte");
 			}
-
-			int8_t key = 0;
-			if (pBus->pInput && pBus->pInput->is_any_key_pressed(key)) {
-				m_v[(instruction & 0x0F00) >> 8] = key;
-			} else {
-				m_pc -= 2;
-			}
+			m_v[(instruction & 0x0F00) >> 8] = (uint8_t)(instruction & 0x00FF);
 		} break;
-		case 0x15:
-		{
+		case 0x8: {
 			if (debugger) {
-				debugger->update_instruction(instruction, "Fx15 - LD DT, Vx");
+				debugger->update_instruction(instruction, "8xy0 - LD Vx, Vy");
 			}
-
-			m_dt = m_v[(instruction & 0x0F00) >> 8];
+			m_v[(instruction & 0x0F00) >> 8] = m_v[(instruction & 0x00F0) >> 4];
 		} break;
-		case 0x18:
-		{
-			if (debugger) {
-				debugger->update_instruction(instruction, "Fx18 - LD ST, Vx");
-			}
-
-			m_st = m_v[(instruction & 0x0F00) >> 8];
-		} break;
-		case 0x29:
-		{
-			if (debugger) {
-				debugger->update_instruction(instruction, "Fx29 - LD F, Vx");
-			}
-
-			m_i = pBus->pMemory->read_font_address(m_v[(instruction & 0x0F00) >> 8]);
-		} break;
-		case 0x55:
-		{
-			if (debugger) {
-				debugger->update_instruction(instruction, "Fx55 - LD [I], Vx");
-			}
-
-			uint8_t n = (instruction & 0x0F00) >> 8;
-			for (uint8_t i = 0; i <= n; i++) {
-				pBus->pMemory->write_byte(m_i + i, m_v[i]);
-			}
-		} break;
-		case 0x65:
-		{
-			if (debugger) {
-				debugger->update_instruction(instruction, "Fx65 - LD Vx, [I]");
-			}
-
-			uint8_t n = (instruction & 0x0F00) >> 8;
-			for (uint8_t i = 0; i <= n; i++) {
-				m_v[i] = pBus->pMemory->read_byte(m_i + i);
+		case 0xF: {
+			switch (instruction & 0x00FF) {
+				case 0x07: {
+					if (debugger) {
+						debugger->update_instruction(instruction, "Fx07 - LD Vx, DT");
+					}
+		
+					m_v[(instruction & 0x0F00) >> 8] = m_dt;
+				} break;
+				case 0x0A: {
+					if (debugger) {
+						debugger->update_instruction(instruction, "Fx0A - LD Vx, K");
+					}
+		
+					int8_t key = 0;
+					if (pBus->pInput && pBus->pInput->is_any_key_pressed(key)) {
+						m_v[(instruction & 0x0F00) >> 8] = key;
+					} else {
+						m_pc -= 2;
+					}
+				} break;
+				case 0x15: {
+					if (debugger) {
+						debugger->update_instruction(instruction, "Fx15 - LD DT, Vx");
+					}
+		
+					m_dt = m_v[(instruction & 0x0F00) >> 8];
+				} break;
+				case 0x18: {
+					if (debugger) {
+						debugger->update_instruction(instruction, "Fx18 - LD ST, Vx");
+					}
+		
+					m_st = m_v[(instruction & 0x0F00) >> 8];
+				} break;
+				case 0x29: {
+					if (debugger) {
+						debugger->update_instruction(instruction, "Fx29 - LD F, Vx");
+					}
+		
+					m_i = pBus->pMemory->read_font_address(m_v[(instruction & 0x0F00) >> 8]);
+				} break;
+				case 0x55: {
+					if (debugger) {
+						debugger->update_instruction(instruction, "Fx55 - LD [I], Vx");
+					}
+		
+					uint8_t n = (instruction & 0x0F00) >> 8;
+					for (uint8_t i = 0; i <= n; i++) {
+						pBus->pMemory->write_byte(m_i + i, m_v[i]);
+					}
+				} break;
+				case 0x65: {
+					if (debugger) {
+						debugger->update_instruction(instruction, "Fx65 - LD Vx, [I]");
+					}
+		
+					uint8_t n = (instruction & 0x0F00) >> 8;
+					for (uint8_t i = 0; i <= n; i++) {
+						m_v[i] = pBus->pMemory->read_byte(m_i + i);
+					}
+				} break;
+				default: {
+					if (debugger) {
+						debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+					}
+				}
 			}
 		} break;
-		default:
-		{
+		default: {
 			if (debugger) {
 				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
 			}
 		}
-		}
-	} break;
-	default:
-	{
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
-		}
-	}
 	}
 
 	return 0;
@@ -336,9 +324,10 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 
 uint8_t CPU::OR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	default:
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
@@ -347,16 +336,16 @@ uint8_t CPU::OR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 
 uint8_t CPU::RET(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	case 0x0:
-	{
-		if (debugger) {
-			debugger->update_instruction(instruction, "00EE - RET");
-		}
-		m_pc = m_stack[--m_sp];
-	} break;
-	default:
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		case 0x0: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "00EE - RET");
+			}
+			m_pc = m_stack[--m_sp];
+		} break;
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
@@ -365,9 +354,10 @@ uint8_t CPU::RET(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::RND(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	default:
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
@@ -376,39 +366,40 @@ uint8_t CPU::RND(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::SE(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	case 0x3:
-	{
-		if (debugger) {
-			debugger->update_instruction(instruction, "3xkk - SE Vx, byte");
-		}
-
-		if (m_v[(instruction & 0x0F00) >> 8] == (uint8_t)(instruction & 0x00FF)) {
-			m_pc += 2;
-		}
-	} break;
-	default:
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		case 0x3: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "3xkk - SE Vx, byte");
+			}
+	
+			if (m_v[(instruction & 0x0F00) >> 8] == (uint8_t)(instruction & 0x00FF)) {
+				m_pc += 2;
+			}
+		} break;
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
+
 	return 0;
 }
 
 uint8_t CPU::SHL(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	case 0x8:
-	{
-		if (debugger) {
-			debugger->update_instruction(instruction, "8xyE - SHL Vx {, Vy}.");
-		}
-
-		uint8_t x = m_v[(instruction & 0x0F00) >> 8];
-		m_v[0xF] = x & 0x80;
-		m_v[(instruction & 0x0F00) >> 8] = x << 1;
-	} break;
-	default:
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		case 0x8: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "8xyE - SHL Vx {, Vy}.");
+			}
+	
+			uint8_t x = m_v[(instruction & 0x0F00) >> 8];
+			m_v[0xF] = x & 0x80;
+			m_v[(instruction & 0x0F00) >> 8] = x << 1;
+		} break;
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
@@ -417,19 +408,19 @@ uint8_t CPU::SHL(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::SHR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	case 0x8:
-	{
-		if (debugger) {
-			debugger->update_instruction(instruction, "8xy6 - SHR Vx {, Vy}");
-		}
-
-		uint8_t x = m_v[(instruction & 0x0F00) >> 8];
-		m_v[0xF] = x & 0x01;
-		m_v[(instruction & 0x0F00) >> 8] = x >> 1;
-	} break;
-	default:
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		case 0x8: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "8xy6 - SHR Vx {, Vy}");
+			}
+	
+			uint8_t x = m_v[(instruction & 0x0F00) >> 8];
+			m_v[0xF] = x & 0x01;
+			m_v[(instruction & 0x0F00) >> 8] = x >> 1;
+		} break;
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
@@ -438,19 +429,19 @@ uint8_t CPU::SHR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::SNE(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	case 0x4:
-	{
-		if (debugger) {
-			debugger->update_instruction(instruction, "4xkk - SNE Vx, byte");
-		}
-	
-		if (m_v[(instruction & 0x0F00) >> 8] != (uint8_t)(instruction & 0x00FF)) {
-			m_pc += 2;
-		}
-	} break;
-	default:
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		case 0x4: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "4xkk - SNE Vx, byte");
+			}
+		
+			if (m_v[(instruction & 0x0F00) >> 8] != (uint8_t)(instruction & 0x00FF)) {
+				m_pc += 2;
+			}
+		} break;
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
@@ -504,9 +495,20 @@ uint8_t CPU::SKNP(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& de
 
 uint8_t CPU::SUB(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	default:
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		case 0x8: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "8xy5 - SUB Vx, Vy");
+			}
+
+			int8_t x = m_v[(instruction & 0x0F00) >> 8];
+			int8_t y = m_v[(instruction & 0x00F0) >> 4];
+			m_v[0xF] = (x > y) ? 1 : 0;
+			m_v[(instruction & 0x0F00) >> 8] -= y; 
+		}break;
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
@@ -515,9 +517,10 @@ uint8_t CPU::SUB(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::SUBN(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	default:
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
@@ -526,9 +529,10 @@ uint8_t CPU::SUBN(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& de
 
 uint8_t CPU::SYS(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	default:
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
@@ -537,9 +541,17 @@ uint8_t CPU::SYS(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::XOR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
-	default:
-		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+		case 0x8: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "8xy3 - XOR Vx, Vy");
+			}
+	
+			m_v[(instruction & 0x0F00) >> 8] ^= m_v[(instruction & 0x00F0) >> 4];
+		}break;
+		default: {
+			if (debugger) {
+				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			}
 		}
 	}
 
