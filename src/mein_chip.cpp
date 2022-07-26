@@ -54,6 +54,7 @@ private:
 	}
 
 	bool initialize() {
+		std::srand(std::time(nullptr));
 
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0) {
 			std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
@@ -120,10 +121,16 @@ private:
 			return -1;
 		}
 
-
+		using frames = std::chrono::duration<int64_t, std::ratio<1, 60>>;
+		auto next_frame = std::chrono::system_clock::now() + frames{0};
+		auto last_frame = next_frame - frames {1};
 		bool pause = true, step = false;
-		uint32_t previous_time = 0;
 		while (true) {
+			std::this_thread::sleep_until(next_frame);
+			auto time = std::chrono::system_clock::now() + frames{0} -  last_frame;
+			last_frame = next_frame;
+			next_frame += frames{1};
+
 			int32_t mouse_x, mouse_y;
 			int32_t mouse_bitmask = SDL_GetMouseState(&mouse_x, &mouse_y);
 
@@ -181,6 +188,7 @@ private:
 				if (m_debugger) {
 					m_debugger->handle_event(&event);
 				}
+
 				m_pInput->handle_event(&event);
 				m_pInput->handle_debugger(m_debugger);
 			}
@@ -190,18 +198,9 @@ private:
 				m_debugger->tick();
 			}
 
-			uint32_t current_time = SDL_GetTicks();
-			float delta = (float)(current_time - previous_time);
-			if (delta > (1000 / 60.0f) && (!pause || step)) {
+			if (!pause || step) {
 				Bus bus = { m_pMemory, m_pDisplay, m_pInput };
-
-				for (int32_t i = 0; i < INSTRUCTIONS_PER_TICK; i++) {
-					m_pCPU->tick(&bus, m_debugger);
-					if (pause) {
-						break;
-					}
-				}
-				previous_time = current_time;
+				m_pCPU->tick(&bus, m_debugger);
 				step = false;
 			}
 

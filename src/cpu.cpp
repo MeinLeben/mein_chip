@@ -285,6 +285,22 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 		
 					m_i = pBus->pMemory->read_font_address(m_v[(instruction & 0x0F00) >> 8]);
 				} break;
+				case 0x33: {
+					if (debugger) {
+						debugger->update_instruction(instruction, "Fx33 - LD B, Vx");
+					}
+
+					uint8_t v = m_v[(instruction & 0x0F00) >> 8];
+
+					uint8_t o = v % 10;
+					pBus->pMemory->write(m_i + 2, &o, sizeof(uint8_t));
+
+					uint8_t t = v % 100 - o;
+					pBus->pMemory->write(m_i + 1, &t, sizeof(uint8_t));
+
+					uint8_t h = v % 1000 - t - o;
+					pBus->pMemory->write(m_i, &h, sizeof(uint8_t));
+				} break;
 				case 0x55: {
 					if (debugger) {
 						debugger->update_instruction(instruction, "Fx55 - LD [I], Vx");
@@ -354,6 +370,13 @@ uint8_t CPU::RET(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 uint8_t CPU::RND(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	switch (instruction >> 12) {
+		case 0xC: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "Cxkk - RND Vx, byte");
+			}
+
+			m_v[(instruction & 0x0F00) >> 8] = ((uint8_t)m_v[(instruction & 0x00FF)]) & std::rand() % 256;
+		} break;
 		default: {
 			if (debugger) {
 				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
@@ -438,6 +461,16 @@ uint8_t CPU::SNE(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 				m_pc += 2;
 			}
 		} break;
+		case 0x9: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "9xy0 - SNE Vx, Vy");
+			}
+		
+			if (m_v[(instruction & 0x0F00) >> 8] != m_v[(instruction & 0x00F0) >> 4]) {
+				m_pc += 2;
+			}
+		} break;
+
 		default: {
 			if (debugger) {
 				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
