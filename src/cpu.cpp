@@ -398,6 +398,15 @@ uint8_t CPU::SE(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 				m_pc += 2;
 			}
 		} break;
+		case 0x5: {
+			if (debugger) {
+				debugger->update_instruction(instruction, "5xy0 - SE Vx, Vy");
+			}
+	
+			if (m_v[(instruction & 0x0F00) >> 8] == m_v[(instruction & 0x00F0) >> 4]) {
+				m_pc += 2;
+			}
+		} break;
 		default: {
 			if (debugger) {
 				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
