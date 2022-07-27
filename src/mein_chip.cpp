@@ -145,54 +145,61 @@ private:
 
 					if (event.type == SDL_WINDOWEVENT) {
 						switch(event.window.event) {
-						case SDL_WINDOWEVENT_CLOSE:
-							return 0;
-						case SDL_WINDOWEVENT_MINIMIZED:
-							if (m_debugger) {
-								m_debugger->minimize();
-							}
-							break;
-						case SDL_WINDOWEVENT_SHOWN:
-							if (m_debugger) {
-								m_debugger->restore();
-							}
-							break;
-						default:
-							break;
+							case SDL_WINDOWEVENT_CLOSE:
+								return 0;
+							case SDL_WINDOWEVENT_MINIMIZED:
+								if (m_debugger) {
+									m_debugger->minimize();
+								}
+								break;
+							case SDL_WINDOWEVENT_SHOWN:
+								if (m_debugger) {
+									m_debugger->restore();
+								}
+								break;
+							default:
+								break;
 						}
 					}
 
 					if (event.type == SDL_KEYUP) {
 						switch(event.key.keysym.scancode) {
-						case SDL_SCANCODE_ESCAPE:
-							return 0;
-						case SDL_SCANCODE_TAB:
-							if (m_debugger) {
-								m_debugger->show(!m_debugger->is_visible());
-							}
-							SDL_RaiseWindow(m_pWindow);
-							break;
-						case SDL_SCANCODE_N:
-							step = pause;
-							break;
-						case SDL_SCANCODE_SPACE:
-							pause = !pause;
-							break;
-						case SDL_SCANCODE_K:
-							m_pInput->use_virtual_keypad(!m_pInput->is_using_virtual_keypad());
-							break;
-						case SDL_SCANCODE_UP:
-							m_num_cycles_per_tick++;
-							update_window_title();
-							break;
-						case SDL_SCANCODE_DOWN:
-							if (m_num_cycles_per_tick > 1) {
-								m_num_cycles_per_tick--;
-							}
-							update_window_title();
-							break;
-						default:
-							break;
+							case SDL_SCANCODE_ESCAPE:
+								return 0;
+							case SDL_SCANCODE_TAB:
+								if (m_debugger) {
+									m_debugger->show(!m_debugger->is_visible());
+								}
+								SDL_RaiseWindow(m_pWindow);
+								break;
+							case SDL_SCANCODE_N:
+								step = pause;
+								break;
+							case SDL_SCANCODE_SPACE:
+								pause = !pause;
+								break;
+							case SDL_SCANCODE_K:
+								m_pInput->use_virtual_keypad(!m_pInput->is_using_virtual_keypad());
+								break;
+							default:
+								break;
+						}
+					}
+
+					if (event.type == SDL_KEYDOWN) {
+						switch(event.key.keysym.scancode) {
+							case SDL_SCANCODE_UP:
+								m_num_cycles_per_tick++;
+								update_window_title();
+								break;
+							case SDL_SCANCODE_DOWN:
+								if (m_num_cycles_per_tick > 1) {
+									m_num_cycles_per_tick--;
+								}
+								update_window_title();
+								break;
+							default:
+								break;
 						}
 					}
 				}
