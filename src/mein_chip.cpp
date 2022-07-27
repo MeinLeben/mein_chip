@@ -5,7 +5,7 @@
 #include "loader.h"
 #include "memory.h"
 
-static const char* APP_TITLE = "Mein Chip8 Interpreter";
+static const std::string APP_TITLE = "Mein Chip8 Interpreter";
 static const uint32_t APP_WIDTH = 720;
 static const uint32_t APP_HEIGHT = 405;
 static const SDL_Color BACKGROUND = {31, 31, 31, 255};
@@ -67,7 +67,7 @@ private:
 		}
 
 		m_pWindow = SDL_CreateWindow(
-			APP_TITLE,
+			APP_TITLE.c_str(),
 			SDL_WINDOWPOS_UNDEFINED,
 			SDL_WINDOWPOS_UNDEFINED,
 			APP_WIDTH,
@@ -120,6 +120,8 @@ private:
 		if (!m_initialized) {
 			return -1;
 		}
+
+		update_window_title();
 
 		using frames = std::chrono::duration<int64_t, std::ratio<1, 60>>;
 		auto next_frame = std::chrono::system_clock::now() + frames{0};
@@ -179,6 +181,16 @@ private:
 						case SDL_SCANCODE_K:
 							m_pInput->use_virtual_keypad(!m_pInput->is_using_virtual_keypad());
 							break;
+						case SDL_SCANCODE_UP:
+							m_num_cycles_per_tick++;
+							update_window_title();
+							break;
+						case SDL_SCANCODE_DOWN:
+							if (m_num_cycles_per_tick > 1) {
+								m_num_cycles_per_tick--;
+							}
+							update_window_title();
+							break;
 						default:
 							break;
 						}
@@ -199,8 +211,19 @@ private:
 			}
 
 			if (!pause || step) {
-				Bus bus = { m_pMemory, m_pDisplay, m_pInput };
-				m_pCPU->tick(&bus, m_debugger);
+				for (int i = 0; i < m_num_cycles_per_tick; i++) {
+					while(SDL_PollEvent(&event)) {
+						m_pInput->handle_event(&event);
+						m_pInput->handle_debugger(m_debugger);
+					}
+
+					Bus bus = { m_pMemory, m_pDisplay, m_pInput };
+					m_pCPU->tick(&bus, m_debugger);
+
+					if (pause) {
+						break;
+					}
+				}
 				step = false;
 			}
 
@@ -219,6 +242,11 @@ private:
 		SDL_RenderPresent(m_pRenderer);
 	}
 
+	void update_window_title() {
+		std::string title = APP_TITLE + " - cycles per tick: " + std::to_string(m_num_cycles_per_tick);
+		SDL_SetWindowTitle(m_pWindow, title.c_str());
+	}
+
 	bool m_initialized = false;
 
 	SDL_Window* m_pWindow = nullptr;
@@ -235,6 +263,8 @@ private:
 	Input* m_pInput = nullptr;
 	Memory* m_pMemory = nullptr;
 	CPU* m_pCPU = nullptr;
+	uint32_t m_num_cycles_per_tick = 1;
+
 #if USE_DEBUGGER
 	std::unique_ptr<Debugger> m_debugger;
 #endif
