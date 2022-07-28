@@ -293,12 +293,14 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 					uint8_t v = m_v[(instruction & 0x0F00) >> 8];
 
 					uint8_t o = v % 10;
-					pBus->pMemory->write(m_i + 2, &o, sizeof(uint8_t));
-
 					uint8_t t = v % 100 - o;
-					pBus->pMemory->write(m_i + 1, &t, sizeof(uint8_t));
-
 					uint8_t h = v % 1000 - t - o;
+
+					t /= 10;
+					h /= 100;
+
+					pBus->pMemory->write(m_i + 2, &o, sizeof(uint8_t));
+					pBus->pMemory->write(m_i + 1, &t, sizeof(uint8_t));
 					pBus->pMemory->write(m_i, &h, sizeof(uint8_t));
 				} break;
 				case 0x55: {
