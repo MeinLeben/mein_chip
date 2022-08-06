@@ -5,9 +5,11 @@
             "includePath": [
                 "/opt/homebrew/Cellar/sdl2/2.0.22/include/SDL2",
                 "/opt/homebrew/include/SDL2",
+                "/opt/homebrew/lib/wx/include/osx_cocoa-unicode-3.2",
+                "/opt/homebrew/include/wx-3.2"
             ],
             "forcedInclude": ["${workspaceFolder}/src/pch.h"],
-            "defines": ["DEBUG"],
+            "defines": ["__WXOSX_COCOA__" ,"DEBUG"],
             "macFrameworkPath": [],
             "compilerPath": "/opt/homebrew/bin/gcc-11",
             "cStandard": "gnu17",

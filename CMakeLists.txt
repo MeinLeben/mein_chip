@@ -14,6 +14,8 @@ endif()
 
 set(CMAKE_BUILD_TYPE Debug)
 
+add_definitions(-DDEBUG)
+
 if (WIN32)
 	set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/external/cmake/SDL2")
 	set(SDL2_DIR "${CMAKE_SOURCE_DIR}/external/SDL2")
@@ -24,14 +26,16 @@ endif()
 
 find_package(SDL2 REQUIRED)
 
+find_package(wxWidgets REQUIRED COMPONENTS net core base)
+
 if (NOT WIN32)
 	set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/external/cmake/SDL2TTF")
 	find_package(SDL2TTF REQUIRED)
 endif()
 
-add_definitions(-DDEBUG)
-
 include_directories(${SDL2_INCLUDE_DIRS} ${SDL2TTF_INCLUDE_DIR})
+
+include(${wxWidgets_USE_FILE})
 
 file(GLOB SOURCE "./src/*.cpp" "./src/*.h")
 
@@ -43,7 +47,7 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT m
 set_property(TARGET mein_chip PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:mein_chip>")
 set_target_properties(mein_chip PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "\"D:\\Development\\Data\\Roms\\chip8-roms\\programs\\Keypad Test [Hap, 2006].ch8\"")
 
-target_link_libraries(mein_chip ${SDL2_LIBRARIES} ${SDL2TTF_LIBRARY})
+target_link_libraries(mein_chip ${SDL2_LIBRARIES} ${SDL2TTF_LIBRARY} ${wxWidgets_LIBRARIES})
 target_precompile_headers(mein_chip PRIVATE src/pch.h)
 
 if (WIN32)

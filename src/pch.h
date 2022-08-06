@@ -19,3 +19,9 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include <SDL_ttf.h>
+
+#include <wx/wxprec.h>
+ 
+#ifndef WX_PRECOMP
+    #include <wx/wx.h>
+#endif

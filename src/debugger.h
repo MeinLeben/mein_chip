@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef DEBUG
-#define USE_DEBUGGER 1
+#define USE_DEBUGGER 0
 #else
 #define USE_DEBUGGER 0
 #endif
