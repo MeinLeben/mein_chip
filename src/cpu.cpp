@@ -33,7 +33,7 @@ CPU::CPU(std::unique_ptr<Debugger>& debugger) {
 	}
 }
 
-void CPU::tick(Bus* pBus, std::unique_ptr<Debugger>& debugger) {
+void CPU::Tick(Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	if (!pBus || !pBus->pMemory) {
 		return;
 	}
@@ -54,6 +54,18 @@ void CPU::tick(Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 		debugger->update_stack_pointer(m_sp);
 		debugger->update_stack(m_stack, 16);
 	}
+}
+
+void CPU::Reset() {
+	memset(m_v, 0, sizeof(uint8_t) * 16);
+	m_i = 0;
+	m_dt = 0;
+	m_st = 0;
+
+	m_pc = 0x0200;
+	m_sp = 0;
+
+	memset(m_stack, 0, sizeof(uint16_t) * 16);
 }
 
 uint16_t CPU::fetch(Memory* pMemory) {

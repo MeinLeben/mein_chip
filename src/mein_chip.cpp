@@ -68,6 +68,8 @@ bool MeinChip::OnInit() {
 	m_pMainWindow = new MainWindow(this, APP_TITLE, APP_WIDTH, APP_HEIGHT);
 	m_pMainWindow->Show(true);
 	m_pMainWindow->BindOnOpenHandler(this, &MeinChip::OnOpen);
+	m_pMainWindow->Bind(wxEVT_KEY_UP, &MeinChip::OnKeyUp, this);
+	m_pMainWindow->Bind(wxEVT_KEY_DOWN, &MeinChip::OnKeyDown, this);
 
 	m_pRenderer = SDL_CreateRenderer(m_pMainWindow->GetSDLWindow(), -1, SDL_RENDERER_ACCELERATED);
 	if (!m_pRenderer) {
@@ -75,8 +77,9 @@ bool MeinChip::OnInit() {
 		return false;
 	}
 
+	m_pInput = new Input(m_pMainWindow);
+
 	m_pDisplay = new Display(DISPLAY_X, DISPLAY_Y, DISPLAY_PIXEL_SCALE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-	m_pInput = new Input;
 	m_pMemory = new Memory(4096);
 	m_pCPU = new CPU(m_debugger);
 
@@ -94,79 +97,81 @@ void MeinChip::OnMainWindowClose(wxCloseEvent& event) {
 	event.Skip();
 }
 
+void MeinChip::OnKeyUp(wxKeyEvent& event) {
+	switch (event.GetKeyCode()) {
+		case WXK_SPACE: {
+			if (m_romLoaded) {
+				m_pause = !m_pause;
+			} else {
+				m_pause = true;
+			}
+		} break;
+		case 'N': {
+			m_step = m_pause;
+		} break;
+		case 'K': {
+			m_pInput->use_virtual_keypad(!m_pInput->is_using_virtual_keypad());
+		} break;
+		case WXK_BACK: {
+			Reset();
+		} break;
+		default:
+			break;
+	}
+
+	event.Skip();
+}
+
+void MeinChip::OnKeyDown(wxKeyEvent& event) {
+	switch(event.GetKeyCode()) {
+		case WXK_UP: {
+			m_num_cycles_per_tick++;
+			UpdateWindowTitle();
+		} break;
+		case WXK_DOWN: {
+			if (m_num_cycles_per_tick > 1) {
+				m_num_cycles_per_tick--;
+			}
+			UpdateWindowTitle();
+		} break;
+		default:
+			break;
+	}
+
+	event.Skip();
+}
+
 void MeinChip::Update() {
 	if (!m_initialized) {
 		return;
 	}
 
-	update_window_title();
+	UpdateWindowTitle();
 
-	bool pause = true, step = false;
 	int32_t mouse_x, mouse_y;
 	int32_t mouse_bitmask = SDL_GetMouseState(&mouse_x, &mouse_y);
 
-	SDL_Event event;
-	while (SDL_PollEvent(&event)) {
-		if (event.window.windowID == SDL_GetWindowID(m_pMainWindow->GetSDLWindow())) {
-			if (event.type == SDL_KEYUP) {
-				switch(event.key.keysym.scancode) {
-					case SDL_SCANCODE_N:
-						step = pause;
-						break;
-					case SDL_SCANCODE_SPACE:
-						pause = !pause;
-						break;
-					case SDL_SCANCODE_K:
-						m_pInput->use_virtual_keypad(!m_pInput->is_using_virtual_keypad());
-						break;
-					default:
-						break;
-				}
-			}
-
-			if (event.type == SDL_KEYDOWN) {
-				switch(event.key.keysym.scancode) {
-					case SDL_SCANCODE_UP:
-						m_num_cycles_per_tick++;
-						update_window_title();
-						break;
-					case SDL_SCANCODE_DOWN:
-						if (m_num_cycles_per_tick > 1) {
-							m_num_cycles_per_tick--;
-						}
-						update_window_title();
-						break;
-					default:
-						break;
-				}
-			}
-		}
-
-		m_pInput->handle_event(&event);
-		m_pInput->handle_debugger(m_debugger);
-	}
-
-	if (!pause || step) {
+	if (m_romLoaded && (!m_pause || m_step)) {
 		for (int i = 0; i < m_num_cycles_per_tick; i++) {
-			while(SDL_PollEvent(&event)) {
-				m_pInput->handle_event(&event);
-				m_pInput->handle_debugger(m_debugger);
-			}
-
 			Bus bus = { m_pMemory, m_pDisplay, m_pInput };
-			m_pCPU->tick(&bus, m_debugger);
+			m_pCPU->Tick(&bus, m_debugger);
 
-			if (pause) {
+			if (m_pause) {
 				break;
 			}
 		}
-		step = false;
+		m_step = false;
 	}
 
-	render();
+	Render();
 }
 
-void MeinChip::render() {
+void MeinChip::Reset() {
+	m_pCPU->Reset();
+	m_pDisplay->clear();
+}
+
+void MeinChip::Render() {
 	SDL_SetRenderDrawColor(m_pRenderer, BACKGROUND.r, BACKGROUND.g, BACKGROUND.b, BACKGROUND.a);
 	SDL_RenderClear(m_pRenderer);
 
@@ -175,7 +180,7 @@ void MeinChip::render() {
 	SDL_RenderPresent(m_pRenderer);
 }
 
-void MeinChip::update_window_title() {
+void MeinChip::UpdateWindowTitle() {
 	std::string title = APP_TITLE + " - cycles per tick: " + std::to_string(m_num_cycles_per_tick);
 	m_pMainWindow->SetTitle(title);
 }
@@ -187,7 +192,12 @@ void MeinChip::OnOpen(const void* pData) {
 		return;
 	}
 
+	Reset();
+
 	m_pMemory->write(0x0200, m_rom.pData, m_rom.size);
+
+	m_romLoaded = true;
+	m_pause = false;
 }
 
 int32_t main(int32_t argc, char* argv[]) {

@@ -15,7 +15,9 @@ class CPU
 public:
 	CPU(std::unique_ptr<Debugger>& debugger);
 
-	void tick(Bus* pBus, std::unique_ptr<Debugger>& debugger);
+	void Tick(Bus* pBus, std::unique_ptr<Debugger>& debugger);
+
+	void Reset();
 
 private:
 	uint8_t m_v[16] = {};

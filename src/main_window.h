@@ -26,7 +26,9 @@ private:
 
 	void OnOpen(wxCommandEvent& event);
 	void OnKeyUp(wxKeyEvent& event);
-	void OnProcessKey(wxKeyEvent& event);
+	void OnKeyDown(wxKeyEvent& event);
+
+	wxPanel* m_pPanel = nullptr;
 
 	SDL_Window* m_pWindow = nullptr;
 

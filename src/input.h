@@ -4,9 +4,11 @@ class Debugger;
 
 class Input {
 public:
-	Input();
+	Input(wxWindow* pWindow);
 
-	void handle_event(SDL_Event* pEvent);
+	void OnKeyUp(wxKeyEvent& event);
+	void OnKeyDown(wxKeyEvent& event);
+
 	void handle_debugger(std::unique_ptr<Debugger>& debugger);
 
 	void use_virtual_keypad(bool use) {
@@ -37,7 +39,7 @@ public:
 
 private:
 	struct key {
-		SDL_KeyCode keycodes[2] = {};
+		int32_t keycodes[2] = {};
 		bool isPressed = false;
 	};
 

@@ -9,23 +9,34 @@ public:
 	bool OnInit();
 	void Update();
 
+	void OnKeyUp(wxKeyEvent& event);
+	void OnKeyDown(wxKeyEvent& event);
 	void OnMainWindowClose(wxCloseEvent& event);
 
+	class Input* GetInput() const {
+		return m_pInput;
+	}
+
 private:
-	void render();
-
-	void OnOpen(const void* pData);
-	void update_window_title();
-
-	bool m_initialized = false;
-	class MainWindow* m_pMainWindow = nullptr;
-
-	SDL_Renderer* m_pRenderer = nullptr;
-
 	struct Rom {
 		uint8_t* pData = nullptr;
 		size_t size = 0;
 	};
+
+	void Reset();
+	void Render();
+
+	void OnOpen(const void* pData);
+	void UpdateWindowTitle();
+
+	bool m_initialized = false;
+	bool m_romLoaded = false;
+	bool m_pause = true;
+	bool m_step = false;
+
+	class MainWindow* m_pMainWindow = nullptr;
+
+	SDL_Renderer* m_pRenderer = nullptr;
 
 	Rom m_rom = {};
 
