@@ -42,8 +42,8 @@ void CPU::Tick(Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 		m_dt--;
 	}
 
-	uint16_t instruction = fetch(pBus->pMemory);
-	execute(instruction, pBus, debugger);
+	uint16_t instruction = Fetch(pBus->pMemory);
+	Execute(instruction, pBus, debugger);
 
 	if (debugger) {
 		debugger->update_gp_registers(m_v, 16);
@@ -68,14 +68,14 @@ void CPU::Reset() {
 	memset(m_stack, 0, sizeof(uint16_t) * 16);
 }
 
-uint16_t CPU::fetch(Memory* pMemory) {
+uint16_t CPU::Fetch(Memory* pMemory) {
 	uint16_t instruction = pMemory->read_byte(m_pc) << 8;
 	instruction |= pMemory->read_byte(m_pc + 1);
 	m_pc += 2;
 	return instruction;
 }
 
-void CPU::execute(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
+void CPU::Execute(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger) {
 	uint16_t opcode = instruction;
 	switch (instruction >> 12) {
 		case 0x0: {

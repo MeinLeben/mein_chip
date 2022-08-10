@@ -20,22 +20,8 @@ public:
 	void Reset();
 
 private:
-	uint8_t m_v[16] = {};
-	uint16_t m_i = 0;
-	uint8_t m_dt = 0;
-	uint8_t m_st = 0;
-
-	uint16_t m_pc = 0x0200;
-	uint8_t m_sp = 0;
-
-	uint16_t m_stack[16] = {};
-
-	std::unordered_map <uint16_t, uint8_t(CPU::*)(uint16_t, Bus*, std::unique_ptr<Debugger>&)> m_instructions;
-
-	uint16_t fetch(Memory* pMemory);
-	void execute(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger);
-
-	void log_instruction(uint16_t instruction);
+	uint16_t Fetch(Memory* pMemory);
+	void Execute(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger);
 
 	uint8_t ADD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger);
 	uint8_t AND(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger);
@@ -57,5 +43,17 @@ private:
 	uint8_t SUBN(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger);
 	uint8_t SYS(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger);
 	uint8_t XOR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debugger);
+
+	uint8_t m_v[16] = {};
+	uint16_t m_i = 0;
+	uint8_t m_dt = 0;
+	uint8_t m_st = 0;
+
+	uint16_t m_pc = 0x0200;
+	uint8_t m_sp = 0;
+
+	uint16_t m_stack[16] = {};
+
+	std::unordered_map <uint16_t, uint8_t(CPU::*)(uint16_t, Bus*, std::unique_ptr<Debugger>&)> m_instructions;
 
 };

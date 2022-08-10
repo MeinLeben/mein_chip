@@ -63,7 +63,7 @@ bool MeinChip::OnInit() {
 		return false;
 	}
 
-	m_pMainWindow = new MainWindow(this, APP_TITLE, APP_WIDTH, APP_HEIGHT);
+	m_pMainWindow = new MainWindow(APP_TITLE, APP_WIDTH, APP_HEIGHT);
 	m_pMainWindow->Show(true);
 	m_pMainWindow->Bind(EVT_FILE_OPENED, &MeinChip::OnFileOpen, this);
 	m_pMainWindow->Bind(wxEVT_KEY_UP, &MeinChip::OnKeyUp, this);
