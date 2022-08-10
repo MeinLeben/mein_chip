@@ -9,10 +9,6 @@ public:
 	bool OnInit();
 	void Update();
 
-	void OnKeyUp(wxKeyEvent& event);
-	void OnKeyDown(wxKeyEvent& event);
-	void OnMainWindowClose(wxCloseEvent& event);
-
 	class Input* GetInput() const {
 		return m_pInput;
 	}
@@ -23,10 +19,14 @@ private:
 		size_t size = 0;
 	};
 
+	void OnKeyUp(wxKeyEvent& event);
+	void OnKeyDown(wxKeyEvent& event);
+	void OnFileOpen(wxCommandEvent& event);
+	void OnMainWindowClose(wxCloseEvent& event);
+
 	void Reset();
 	void Render();
 
-	void OnOpen(const void* pData);
 	void UpdateWindowTitle();
 
 	bool m_initialized = false;

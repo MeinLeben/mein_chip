@@ -17,8 +17,6 @@ static const uint32_t DISPLAY_PIXEL_SCALE = 10;
 static const uint32_t DISPLAY_X = APP_WIDTH / 2 - DISPLAY_WIDTH * DISPLAY_PIXEL_SCALE / 2;
 static const uint32_t DISPLAY_Y = 20;
 
-static const uint32_t INSTRUCTIONS_PER_TICK = 10;
-
 class UpdateTimer : public wxTimer {
 public:
 	UpdateTimer(class MeinChip* pMeinChip, int32_t intervalInMilliSeconds)
@@ -67,9 +65,10 @@ bool MeinChip::OnInit() {
 
 	m_pMainWindow = new MainWindow(this, APP_TITLE, APP_WIDTH, APP_HEIGHT);
 	m_pMainWindow->Show(true);
-	m_pMainWindow->BindOnOpenHandler(this, &MeinChip::OnOpen);
+	m_pMainWindow->Bind(EVT_FILE_OPENED, &MeinChip::OnFileOpen, this);
 	m_pMainWindow->Bind(wxEVT_KEY_UP, &MeinChip::OnKeyUp, this);
 	m_pMainWindow->Bind(wxEVT_KEY_DOWN, &MeinChip::OnKeyDown, this);
+	m_pMainWindow->Bind(wxEVT_CLOSE_WINDOW, &MeinChip::OnMainWindowClose, this);
 
 	m_pRenderer = SDL_CreateRenderer(m_pMainWindow->GetSDLWindow(), -1, SDL_RENDERER_ACCELERATED);
 	if (!m_pRenderer) {
@@ -89,12 +88,6 @@ bool MeinChip::OnInit() {
 	m_pUpdateTimer->Start();
 
 	return true;
-}
-
-void MeinChip::OnMainWindowClose(wxCloseEvent& event) {
-	m_pMainWindow->UnBindOnOpenHandler(m_onOpenId);
-	m_pUpdateTimer->Stop();
-	event.Skip();
 }
 
 void MeinChip::OnKeyUp(wxKeyEvent& event) {
@@ -141,6 +134,26 @@ void MeinChip::OnKeyDown(wxKeyEvent& event) {
 	event.Skip();
 }
 
+void MeinChip::OnFileOpen(wxCommandEvent& event) {
+	const std::string path = event.GetString().ToStdString();
+	if (!Loader::load(path.c_str(), &m_rom.pData, m_rom.size)) {
+		std::cerr << "Failed to load rom." << std::endl;
+		return;
+	}
+
+	Reset();
+
+	m_pMemory->write(0x0200, m_rom.pData, m_rom.size);
+
+	m_romLoaded = true;
+	m_pause = false;
+}
+
+void MeinChip::OnMainWindowClose(wxCloseEvent& event) {
+	m_pUpdateTimer->Stop();
+	event.Skip();
+}
+
 void MeinChip::Update() {
 	if (!m_initialized) {
 		return;
@@ -183,21 +196,6 @@ void MeinChip::Render() {
 void MeinChip::UpdateWindowTitle() {
 	std::string title = APP_TITLE + " - cycles per tick: " + std::to_string(m_num_cycles_per_tick);
 	m_pMainWindow->SetTitle(title);
-}
-
-void MeinChip::OnOpen(const void* pData) {
-	const std::string* pPath = (const std::string*)pData;
-	if (!Loader::load(pPath->c_str(), &m_rom.pData, m_rom.size)) {
-		std::cerr << "Failed to load rom." << std::endl;
-		return;
-	}
-
-	Reset();
-
-	m_pMemory->write(0x0200, m_rom.pData, m_rom.size);
-
-	m_romLoaded = true;
-	m_pause = false;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
