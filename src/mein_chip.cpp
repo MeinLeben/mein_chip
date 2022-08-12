@@ -17,26 +17,6 @@ static const uint32_t DISPLAY_PIXEL_SCALE = 10;
 static const uint32_t DISPLAY_X = APP_WIDTH / 2 - DISPLAY_WIDTH * DISPLAY_PIXEL_SCALE / 2;
 static const uint32_t DISPLAY_Y = 20;
 
-class UpdateTimer : public wxTimer {
-public:
-	UpdateTimer(class MeinChip* pMeinChip, int32_t intervalInMilliSeconds)
-		: m_pMeinChip(pMeinChip)
-		, m_intervalInMilliSeconds(intervalInMilliSeconds) {
-	}
-
-	void Notify() {
-		m_pMeinChip->Update();
-	}
-
-	void Start() {
-		wxTimer::Start(m_intervalInMilliSeconds);
-	}
-
-private:
-	MeinChip* m_pMeinChip = nullptr;
-	int32_t m_intervalInMilliSeconds = 0;
-};
-
 MeinChip::~MeinChip() {
 	SDL_DestroyRenderer(m_pRenderer);
 	SDL_Quit();
@@ -81,8 +61,6 @@ bool MeinChip::OnInit() {
 	m_pDisplay = new Display(DISPLAY_X, DISPLAY_Y, DISPLAY_PIXEL_SCALE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 	m_pMemory = new Memory(4096);
 	m_pCPU = new CPU(m_debugger);
-
-	m_initialized = true;
 
 	m_pUpdateTimer = new UpdateTimer(this, 10);
 	m_pUpdateTimer->Start();
@@ -147,6 +125,8 @@ void MeinChip::OnFileOpen(wxCommandEvent& event) {
 
 	m_romLoaded = true;
 	m_pause = false;
+
+	UpdateWindowTitle();
 }
 
 void MeinChip::OnMainWindowClose(wxCloseEvent& event) {
@@ -155,15 +135,6 @@ void MeinChip::OnMainWindowClose(wxCloseEvent& event) {
 }
 
 void MeinChip::Update() {
-	if (!m_initialized) {
-		return;
-	}
-
-	UpdateWindowTitle();
-
-	int32_t mouse_x, mouse_y;
-	int32_t mouse_bitmask = SDL_GetMouseState(&mouse_x, &mouse_y);
-
 	if (m_romLoaded && (!m_pause || m_step)) {
 		for (int i = 0; i < m_num_cycles_per_tick; i++) {
 			Bus bus = { m_pMemory, m_pDisplay, m_pInput };

@@ -14,6 +14,27 @@ public:
 	}
 
 private:
+	template<typename T>
+	class UpdateTimer : public wxTimer {
+	public:
+		UpdateTimer(T* pObject, int32_t intervalInMilliSeconds)
+			: m_pObject(pObject)
+			, m_intervalInMilliSeconds(intervalInMilliSeconds) {
+		}
+
+		void Notify() {
+			m_pObject->Update();
+		}
+
+		void Start() {
+			wxTimer::Start(m_intervalInMilliSeconds);
+		}
+
+	private:
+		T* m_pObject = nullptr;
+		int32_t m_intervalInMilliSeconds = 0;
+	};
+
 	struct Rom {
 		uint8_t* pData = nullptr;
 		size_t size = 0;
@@ -38,9 +59,9 @@ private:
 
 	SDL_Renderer* m_pRenderer = nullptr;
 
+	UpdateTimer<MeinChip>* m_pUpdateTimer = nullptr;
 	Rom m_rom = {};
 
-	class UpdateTimer* m_pUpdateTimer = nullptr;
 	class Display* m_pDisplay = nullptr;
 	class Input* m_pInput = nullptr;
 	class Memory* m_pMemory = nullptr;

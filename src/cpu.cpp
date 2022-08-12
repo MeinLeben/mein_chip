@@ -4,7 +4,7 @@
 #include "input.h"
 #include "memory.h"
 
-std::string instruction_to_string(uint16_t instruction) {
+std::string InstructionToString(uint16_t instruction) {
 	std::stringstream ss;
 	ss << "0x" << std::setfill('0') << std::uppercase
 		<< std::setw(sizeof(uint16_t) * 2)
@@ -102,7 +102,7 @@ void CPU::Execute(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& de
 
 	else {
 		if (debugger) {
-			debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+			debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 		}
 	}
 }
@@ -134,7 +134,7 @@ uint8_t CPU::ADD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		} break;
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -154,7 +154,7 @@ uint8_t CPU::AND(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		} break;
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -337,14 +337,14 @@ uint8_t CPU::LD(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 				} break;
 				default: {
 					if (debugger) {
-						debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+						debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 					}
 				}
 			}
 		} break;
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -356,7 +356,7 @@ uint8_t CPU::OR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 	switch (instruction >> 12) {
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -374,7 +374,7 @@ uint8_t CPU::RET(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		} break;
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -393,7 +393,7 @@ uint8_t CPU::RND(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		} break;
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -423,7 +423,7 @@ uint8_t CPU::SE(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& debu
 		} break;
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -444,7 +444,7 @@ uint8_t CPU::SHL(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		} break;
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -465,7 +465,7 @@ uint8_t CPU::SHR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		} break;
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -496,7 +496,7 @@ uint8_t CPU::SNE(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -563,7 +563,7 @@ uint8_t CPU::SUB(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		}break;
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -575,7 +575,7 @@ uint8_t CPU::SUBN(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& de
 	switch (instruction >> 12) {
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -587,7 +587,7 @@ uint8_t CPU::SYS(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 	switch (instruction >> 12) {
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
@@ -606,7 +606,7 @@ uint8_t CPU::XOR(uint16_t instruction, Bus* pBus, std::unique_ptr<Debugger>& deb
 		}break;
 		default: {
 			if (debugger) {
-				debugger->update_error("Instruction: " + instruction_to_string(instruction) + ", not implemented.");
+				debugger->update_error("Instruction: " + InstructionToString(instruction) + ", not implemented.");
 			}
 		}
 	}
